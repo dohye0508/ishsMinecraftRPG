@@ -1,0 +1,19 @@
+# Gradle
+.gradle/
+build/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Sensitive
+*idps.txt
+riro_debug.txt
+riroschoolauth.py
+
+# Others
+*.log

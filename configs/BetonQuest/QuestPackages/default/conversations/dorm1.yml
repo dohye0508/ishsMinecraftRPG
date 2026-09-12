@@ -1,0 +1,17 @@
+conversations:
+  dorm1:
+    quester: "1학년 사감쌤"
+    first: start
+    NPC_options:
+      start:
+        text: "&e[1학년 사감선생님]&f 어이 신입생! 기숙사 통금 시간은 밤 11시 반 점호다! 배고프다고 밤에 징징대지 말고 비상식량으로 빵 5개를 만들어와! 할 텐가?"
+        pointers: accept,q_no
+      q_accept:
+        text: "그 기백이 언제까지 갈지 두고 보마. 안 지켜오면 벌점이다!!"
+        events: start_dorm1_quest
+    player_options:
+      accept:
+        text: "자신 있습니다! 다녀오겠습니다!"
+        pointers: q_accept
+      q_no:
+        text: "도망간다."

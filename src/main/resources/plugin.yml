@@ -1,0 +1,43 @@
+name: ishsMinecraftRpg
+version: 1.0-SNAPSHOT
+main: kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg
+api-version: '1.21'
+load: STARTUP
+
+commands:
+  도움말:
+    description: 서버 명령어 및 팁을 확인합니다.
+    usage: /도움말
+    aliases: [help, ?]
+  인증:
+    description: 리로스쿨 인증을 시작하거나 인증 정보를 확인합니다.
+    usage: /인증
+  인증정보:
+    description: 나의 리로스쿨 인증 정보를 확인합니다.
+    usage: /인증정보
+  인증목록:
+    description: (OP 전용) 현재 접속자 인증 현황을 확인합니다.
+    usage: /인증목록
+    permission: ishsrpg.auth.admin
+  stat:
+    description: 스탯 확인 및 강화
+    usage: /stat
+    aliases: ["스탯", "상태"]
+  퀘스트:
+    description: 현재 진행중인 퀘스트 정보를 확인합니다.
+    usage: /퀘스트
+    aliases: ["quest", "q"]
+  도전과제:
+    description: 달성한 도전과제 목록을 확인합니다.
+    usage: /도전과제
+    aliases: [업적, achievements]
+  lobby:
+    description: 로비(스폰 지점)로 즉시 이동합니다.
+    usage: /lobby
+    aliases: [l]
+  아이템지급:
+    description: 커스텀 RPG 아이템을 플레이어에게 지급합니다 (관리자 전용, BetonQuest 보상용으로도 사용 가능)
+    usage: /아이템지급 [플레이어] [아이템ID]
+  입장허용:
+    description: 서버가 켜져 있어도 관리자 외 플레이어의 입장을 허용/차단합니다 (관리자 전용)
+    usage: /입장허용 [열기|닫기]

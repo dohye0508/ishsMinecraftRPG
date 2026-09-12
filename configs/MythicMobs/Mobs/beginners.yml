@@ -1,0 +1,31 @@
+# 초보자 수련 몬스터 (신입생 실습)
+
+TestRat:
+  Type: ENDERMITE
+  Display: '&7[Lv.1] 변종 실험쥐'
+  Health: 15
+  Damage: 2
+  Options:
+    MovementSpeed: 0.25
+
+MutantRabbit:
+  Type: RABBIT
+  Display: '&a[Lv.3] 방사능 토끼'
+  Health: 30
+  Damage: 4
+  Skills:
+  - leap{velocity=1.2} @target ~onTimer:60
+
+ForestSlime:
+  Type: SLIME
+  Display: '&b[Lv.5] 점성 슬라임'
+  Health: 50
+  Damage: 6
+
+SecurityDrone:
+  Type: PHANTOM
+  Display: '&e[Lv.8] 오작동 보안 드론'
+  Health: 80
+  Damage: 10
+  Options:
+    Flying: true

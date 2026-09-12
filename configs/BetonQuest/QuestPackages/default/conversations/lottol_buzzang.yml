@@ -1,0 +1,23 @@
+conversations:
+  lottol_buzzang:
+    quester: "LOTTOL 부짱"
+    first: start
+    NPC_options:
+      start:
+        text: "&b[LOTTOL 부짱]&f 짱님이 말씀하신 그 뉴비가 바로 너로군! 여기서 빈둥댈 시간은 없다. 우리 LOTTOL의 더러운 실무는 지금부터 네가 담당하게 될 거니까."
+        pointers: quest1,q_no
+      q1:
+        text: "&b[LOTTOL 부짱]&f 첫 임무다. 생체 표본이 필요해. 징그러운 거미 5마리를 처치해주겠어?. 어때, 해낼 자신은 있겠지?"
+        pointers: accept,q_no
+      q_accept:
+        text: "&b[LOTTOL 부짱]&f 좋아. 임무를 마치면 에메랄드 3개을 쥐어 주겠다. 임무 시작이다!"
+        events: start_lottol_quest
+    player_options:
+      quest1:
+        text: "네! 당장 임무를 주십시오!"
+        pointers: q1
+      accept:
+        text: "임무를 완수하고 돌아오겠습니다."
+        pointers: q_accept
+      q_no:
+        text: "아직 준비가 안 됐습니다."

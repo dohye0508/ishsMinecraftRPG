@@ -1,0 +1,115 @@
+events:
+  finish_tutorial_event: "folder finish_msg,give_wooden_sword"
+  finish_msg: "command msg %player% &a[시스템] 성공적으로 첫 대화를 마쳤습니다!"
+  give_wooden_sword: "command give %player% wooden_sword 1"
+  start_logic_quest: "folder logic_start_obj,logic_start_msg"
+  logic_start_obj: "objective start logic_quest_obj"
+  logic_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (LOGIC 부짱)"
+  logic_quest_reward: "folder logic_msg,logic_give"
+  logic_msg: "command msg %player% &a[시스템] LOGIC 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  logic_give: "command give %player% iron_ingot 5"
+  start_win_quest: "folder win_start_obj,win_start_msg"
+  win_start_obj: "objective start win_quest_obj"
+  win_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (WIN 부짱)"
+  win_quest_reward: "folder win_msg,win_give"
+  win_msg: "command msg %player% &a[시스템] WIN 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  win_give: "command give %player% gold_ingot 3"
+  start_tnt_quest: "folder tnt_start_obj,tnt_start_msg"
+  tnt_start_obj: "objective start tnt_quest_obj"
+  tnt_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (TNT 부짱)"
+  tnt_quest_reward: "folder tnt_msg,tnt_give"
+  tnt_msg: "command msg %player% &a[시스템] TNT 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  tnt_give: "command give %player% tnt 3"
+  start_lottol_quest: "folder lottol_start_obj,lottol_start_msg"
+  lottol_start_obj: "objective start lottol_quest_obj"
+  lottol_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (LOTTOL 부짱)"
+  lottol_quest_reward: "folder lottol_msg,lottol_give"
+  lottol_msg: "command msg %player% &a[시스템] LOTTOL 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  lottol_give: "command give %player% emerald 3"
+  start_quasar_quest: "folder quasar_start_obj,quasar_start_msg"
+  quasar_start_obj: "objective start quasar_quest_obj"
+  quasar_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (QUASAR 부짱)"
+  quasar_quest_reward: "folder quasar_msg,quasar_give"
+  quasar_msg: "command msg %player% &a[시스템] QUASAR 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  quasar_give: "command give %player% diamond 1"
+  start_raibit_quest: "folder raibit_start_obj,raibit_start_msg"
+  raibit_start_obj: "objective start raibit_quest_obj"
+  raibit_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (RAIBIT 부짱)"
+  raibit_quest_reward: "folder raibit_msg,raibit_give"
+  raibit_msg: "command msg %player% &a[시스템] RAIBIT 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  raibit_give: "command give %player% redstone 32"
+  start_plutonium_quest: "folder plutonium_start_obj,plutonium_start_msg"
+  plutonium_start_obj: "objective start plutonium_quest_obj"
+  plutonium_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (PLUTONIUM 부짱)"
+  plutonium_quest_reward: "folder plutonium_msg,plutonium_give"
+  plutonium_msg: "command msg %player% &a[시스템] PLUTONIUM 부짱의 퀘스트를 성공적으로 완료했습니다!"
+  plutonium_give: "command give %player% iron_pickaxe 1"
+  start_dorm1_quest: "folder dorm1_start_obj,dorm1_start_msg"
+  dorm1_start_obj: "objective start dorm1_quest_obj"
+  dorm1_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (1학년 사감쌤)"
+  dorm1_quest_reward: "folder dorm1_msg,dorm1_give"
+  dorm1_msg: "command msg %player% &a[시스템] 1학년 사감쌤의 퀘스트를 성공적으로 완료했습니다!"
+  dorm1_give: "command give %player% emerald 5"
+  start_dorm2_quest: "folder dorm2_start_obj,dorm2_start_msg"
+  dorm2_start_obj: "objective start dorm2_quest_obj"
+  dorm2_start_msg: "command msg %player% &e[시스템] 방금 새로운 퀘스트를 받았습니다! (2학년 사감쌤)"
+  dorm2_quest_reward: "folder dorm2_msg,dorm2_give"
+  dorm2_msg: "command msg %player% &a[시스템] 2학년 사감쌤의 퀘스트를 성공적으로 완료했습니다!"
+  dorm2_give: "command give %player% experience_bottle 16"
+
+items:
+  BREAD: BREAD
+
+objectives:
+  logic_quest_obj: "mobkill ZOMBIE 3 events:logic_quest_reward"
+  win_quest_obj: "mobkill SKELETON 3 events:win_quest_reward"
+  tnt_quest_obj: "mobkill CREEPER 2 events:tnt_quest_reward"
+  lottol_quest_obj: "mobkill SPIDER 5 events:lottol_quest_reward"
+  quasar_quest_obj: "block STONE -32 events:quasar_quest_reward"
+  raibit_quest_obj: "block REDSTONE_ORE -5 events:raibit_quest_reward"
+  plutonium_quest_obj: "block IRON_ORE -10 events:plutonium_quest_reward"
+  dorm1_quest_obj: "craft BREAD 5 events:dorm1_quest_reward"
+  dorm2_quest_obj: "block DIAMOND_ORE -1 events:dorm2_quest_reward"
+
+npcs:
+  vice_principal: "citizens 0"
+  principal: "citizens 1"
+  admin_chief: "citizens 2"
+  logic_zzang: "citizens 3"
+  logic_buzzang: "citizens 4"
+  win_zzang: "citizens 5"
+  win_buzzang: "citizens 6"
+  tnt_zzang: "citizens 7"
+  tnt_buzzang: "citizens 8"
+  lottol_zzang: "citizens 9"
+  lottol_buzzang: "citizens 10"
+  quasar_zzang: "citizens 11"
+  quasar_buzzang: "citizens 12"
+  raibit_zzang: "citizens 13"
+  raibit_buzzang: "citizens 14"
+  plutonium_zzang: "citizens 15"
+  plutonium_buzzang: "citizens 16"
+  dorm1: "citizens 17"
+  dorm2: "citizens 18"
+
+npc_conversations:
+  vice_principal: vice_principal
+  principal: principal
+  admin_chief: admin_chief
+  logic_zzang: logic_zzang
+  logic_buzzang: logic_buzzang
+  win_zzang: win_zzang
+  win_buzzang: win_buzzang
+  tnt_zzang: tnt_zzang
+  tnt_buzzang: tnt_buzzang
+  lottol_zzang: lottol_zzang
+  lottol_buzzang: lottol_buzzang
+  quasar_zzang: quasar_zzang
+  quasar_buzzang: quasar_buzzang
+  raibit_zzang: raibit_zzang
+  raibit_buzzang: raibit_buzzang
+  plutonium_zzang: plutonium_zzang
+  plutonium_buzzang: plutonium_buzzang
+  dorm1: dorm1
+  dorm2: dorm2
+
