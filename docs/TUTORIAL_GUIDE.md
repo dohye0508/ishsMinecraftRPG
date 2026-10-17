@@ -1,52 +1,68 @@
-# 🎓 ISHS RPG 튜토리얼 및 입장 흐름 가이드
+# 🎓 ISHS RPG 입장 흐름 가이드
 
-본 가이드는 서버 접속부터 동아리 선택, 튜토리얼 진행까지 전체 흐름을 정리한 안내 문서입니다.
+서버 접속부터 동아리 선택, 첫 NPC 대화까지의 흐름과 각 단계의 수정 위치를 정리한 문서입니다.
 
 ---
 
-## 🔄 전체 입학 메커니즘 (자동화 완료)
+## 🔄 입장 흐름
 
 ```text
-[서버 접속] 
-   └─► [리로스쿨 인증창 (ID/PW 채팅 입력)]
-         └─► [인증 성공!]
-               └─► 🌟 [자동 실행] 동아리 선택 GUI 팝업! 
-                     └─► 7개 동아리 중 1개 선택 (LOGIC, WIN, TNT 등)
-                           └─► 선택 즉시 동아리 스탯 + 고유 스킬 자동 해금!
-                                 └─► [본관 앞 스폰] 
-                                       └─► 교감선생님 NPC 튜토리얼 (Shift+F 스킬 안내 및 목검 지급)
+[서버 접속]
+   └─► [리로스쿨 인증 (ID/PW 채팅 입력)]            config.yml 의 auth
+         └─► [인증 성공]
+               └─► [동아리 선택 GUI 팝업]              clubs.yml
+                     └─► 동아리 스탯 보너스 적용
+                           └─► [최초 스폰]            config.yml 의 spawn.first
+                                 └─► 교감선생님 NPC 대화  npcs.yml, conversations/vice_principal.yml
 ```
 
+| 단계 | 수정 위치 |
+|---|---|
+| 인증 사용 여부, 인증 대기소 위치, 테스트 계정 | `ishsMinecraftRpg/config.yml` (`auth`) |
+| 동아리 이름, 아이콘, 가입 보너스 | `ishsMinecraftRpg/clubs.yml` |
+| 최초 스폰 위치, 맵 경계 | `ishsMinecraftRpg/config.yml` (`spawn`, `border`) |
+| NPC 위치·이름·스킨 | `ishsMinecraftRpg/npcs.yml` 또는 게임의 `/엔피씨` 명령 |
+| NPC 대사 | `BetonQuest/QuestPackages/default/conversations/*.yml` |
+
 ---
 
-## 1. 스킬 시스템 요약
-* **자동 해금**: 리로스쿨 인증 직후 떠오르는 GUI 창에서 동아리를 선택하는 순간, 스킬은 **자동 탑재**됩니다.
-* **스킬 사용법**: 게임 내에서 `Shift + F` (웅크리기 + 양손 교체) 키를 누르면 20 마나를 소모하여 직업 스킬이 즉시 시전됩니다. (쿨타임 15초)
+## 1. 스킬 사용법
+
+스킬은 동아리와 무관하게 **스킬 아이템**을 들고 **우클릭**하면 발동합니다. 마나가 필요하고 쿨타임이 있습니다.
+
+| 스킬 | 아이템 (재료 / 이름) | 마나 | 쿨타임 |
+|---|---|---|---|
+| 화염구 | 블레이즈 로드 / `파이어볼` | 20 | 5초 |
+| 대지 가르기 | 다이아몬드 검 / `대지 가르기` | 30 | 10초 |
+| 신성 폭발 | 마법이 부여된 책 / `신성 폭발` | 40 | 15초 |
+| 치유의 빛 | 황금 사과 / `치유의 빛` | 25 | 8초 |
+
+수치와 재료·이름은 `skills.yml`에서 바꿉니다. 아이템은 `/아이템지급` 또는 퀘스트 보상으로 지급합니다. 자세한 방법은 [기획팀 가이드](기획팀_가이드.md)를 참고합니다.
 
 ---
 
-## 2. 튜토리얼 NPC 연동 (BetonQuest)
+## 2. 교감선생님 NPC
 
-학교 앞 교감선생님 NPC 대화 파일이 `configs/BetonQuest/default/conversations/tutorial.yml`에 준비되어 있습니다.
+현재 NPC는 교장선생님과 교감선생님입니다. ([NPC_LIST.md](NPC_LIST.md))
+교감선생님은 `conversation: vice_principal`로 연결되어 있고 대사는 `conversations/vice_principal.yml`에 있습니다.
 
 ```yaml
-# 튜토리얼 대화 예시
-quester: "교감선생님"
-first: start
-
-NPC_options:
-  start:
-    text: "&e[교감선생님]&f 인천과학고등학교 입학을 환영한다네, 신입생! 리로스쿨 인증 후 동아리 선택은 잘 마쳤겠지?"
-    pointers:
-      - player_yes
-
-  guide_skill:
-    text: "&e[교감선생님]&f 방금 선택한 동아리의 고유 스킬은 &a&lShift + F&f 키로 발동할 수 있네!"
+conversations:
+  vice_principal:
+    quester: "교감선생님"
+    first: start
+    NPC_options:
+      start:
+        text: "&e[교감선생님]&f 인천과학고등학교 입학을 환영한다네, 신입생! ..."
+        pointers: end_ok
 ```
+
+대사를 고친 뒤 `/bq reload`로 적용합니다. 튜토리얼 보상(목검 지급 등)이나 퀘스트 시작을 이 대화에 연결하려면 `events:`에 `main.yml`의 이벤트 이름을 적습니다. (예시는 [기획팀 가이드](기획팀_가이드.md)의 "퀘스트와 NPC 추가")
 
 ---
 
-## 3. 적용 가이드
-1. 프로젝트의 `configs/` 폴더 내 파일들을 서버 `plugins/` 폴더에 복사합니다.
-2. 마인크래프트 본관 정문 앞에서 `/npc create 교감선생님` 명령어로 NPC를 생성합니다.
-3. 교감선생님 NPC에 `tutorial` 대화를 연결합니다.
+## 3. 적용
+
+1. `configs/배포.bat`을 실행합니다.
+2. 게임에서 OP가 `/설정리로드`, `/bq reload`를 입력합니다.
+3. 접속부터 NPC 대화까지 한 번 직접 진행해 확인합니다.
