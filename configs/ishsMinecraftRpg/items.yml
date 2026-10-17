@@ -161,3 +161,28 @@ items:
         actions:
           - type: LAUNCH
             height: 1.1
+
+  # 새 아이템을 코드 수정 없이 추가하는 예시 (이 파일만 고쳐서 만든 아이템)
+  comfort_blanket:
+    material: PINK_CARPET        # 담요 느낌. 망토 느낌을 더 내려면 PINK_BANNER 등으로 바꿀 수 있습니다
+    name: "&d애착담요"
+    lore:
+      - "&7어릴 적부터 곁에 있던 포근한 담요."
+      - "&7어깨에 두르면 어쩐지 발걸음이 가벼워진다."
+      - ""
+      - "&d우클릭 시 30초간 이동속도 소폭 증가 (재사용 대기 60초)"
+    unbreakable: true
+    effects:
+      - trigger: RIGHT_CLICK
+        cooldown: 60              # 재사용 대기시간(초). 소모되지 않는 아이템이라 대기시간으로 조절
+        message: "&d🧸 애착담요를 두르자 발걸음이 가벼워졌다! (이동속도 소폭 증가, 30초)"
+        sound: ITEM_ARMOR_EQUIP_LEATHER
+        particle: CLOUD
+        particle-count: 12
+        particle-spread: 0.4
+        particle-speed: 0.02
+        actions:
+          - type: POTION
+            potion: SPEED
+            seconds: 30
+            level: 1              # 1단계 = 이동속도 +20%
