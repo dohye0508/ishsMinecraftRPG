@@ -19,21 +19,25 @@ ishsMinecraftRpg/
 │   ├── IshsMinecraftRpg.java   # 플러그인 진입점 (onEnable/onDisable)
 │   ├── RpgListener.java        # 공용 이벤트 리스너
 │   ├── PlaceholderHook.java    # PlaceholderAPI 연동
-│   ├── CustomAchievement.java  # 도전과제 정의
+│   ├── CustomAchievement.java  # 도전과제 달성 처리
+│   ├── AchievementConfig.java  # 도전과제 정의 로더 (achievements.yml)
+│   ├── MapConfig.java          # 스폰/인증 장소/맵 경계 설정 로더 (config.yml)
+│   ├── ReloadCommand.java      # /설정리로드 (config 변경을 재시작 없이 적용)
 │   ├── auth/                   # 리로스쿨 계정 인증 (커맨드/리스너/매니저)
-│   ├── item/                   # 커스텀 아이템 정의 및 지급 로직
+│   ├── item/                   # 커스텀 아이템 로드(items.yml) 및 지급 로직
 │   ├── player/                 # 플레이어 데이터, 동아리(직업), 경험치, 스킬, 로비 등
 │   ├── stat/                   # 스탯(HP/MP/능력치) 시스템 및 GUI
-│   ├── listener/               # 개별 기능 리스너
+│   ├── listener/               # 개별 기능 리스너 (직사각형 맵 경계 포함)
 │   └── task/                   # 주기 실행 태스크
 ├── src/main/resources/
-│   ├── plugin.yml              # 플러그인 메타데이터, 커맨드/권한 정의
-│   └── config.yml              # 기본 설정값 (최초 실행 시 서버에 자동 생성)
-├── configs/                    # 서버 plugins/ 폴더에 그대로 복사해 쓰는 사전 구성 파일
+│   └── plugin.yml              # 플러그인 메타데이터, 커맨드/권한 정의
+├── configs/                    # 기획팀이 수정하는 설정 파일 (서버 plugins/ 구조와 동일, Git 기준 원본)
+│   ├── ishsMinecraftRpg/                   # config/items/achievements/help.yml (빌드 시 jar 기본값으로 포함)
 │   ├── BetonQuest/QuestPackages/default/   # 퀘스트/대화 정의
 │   ├── MythicMobs/Mobs/                    # 몬스터 정의
-│   └── README.md                           # 적용 방법 상세
-└── docs/                        # 콘텐츠 문서 (NPC/아이템 목록, 세계관 등)
+│   ├── 배포.bat, 서버에서_가져오기.bat      # configs ↔ 서버 plugins 동기화 (sync.ps1)
+│   └── README.md                           # 사용 방법 상세
+└── docs/                        # 콘텐츠 문서 (기획팀 가이드, NPC/아이템 목록, 세계관 등)
 ```
 
 ## 🧩 연동 플러그인 (별도 설치 필요)
@@ -60,19 +64,20 @@ cd ishsMinecraftRpg
 ## 🚀 서버 배포 방법
 
 1. 위 연동 플러그인들과 이 플러그인의 빌드 결과물(`build/libs/*.jar`)을 서버의 `plugins/` 폴더에 넣습니다.
-2. [`configs/`](configs) 폴더 안의 내용을 [configs/README.md](configs/README.md) 안내에 따라 각 플러그인의 설정 경로에 그대로 복사합니다.
-3. 서버를 최초 실행하면 `config.yml`이 자동 생성되며, 이 파일에서 시작 스탯 등 코드 수정 없이 조정 가능한 값들을 설정할 수 있습니다.
-4. 퀘스트 대사, NPC 배치, 몬스터 스탯 등 `.yml` 설정만 바꾸는 변경은 리빌드가 필요 없고, 자바 소스가 바뀐 경우에만 리빌드가 필요합니다.
+2. 서버를 최초 실행하면 `plugins/ishsMinecraftRpg/`에 `config.yml`, `items.yml`, `achievements.yml`, `help.yml`이 자동 생성됩니다.
+3. [`configs/`](configs) 폴더의 **`배포.bat`**을 실행하면 BetonQuest, MythicMobs 설정과 위 파일들이 서버 `plugins/`로 복사됩니다. (서버 폴더 경로는 처음 한 번 입력, 상세는 [configs/README.md](configs/README.md))
+4. 스폰·인증 장소·맵 경계·아이템·도전과제·도움말·퀘스트 대사 등 `.yml` 설정만 바꾸는 변경은 리빌드가 필요 없습니다. `configs/`를 고치고 `배포.bat` 실행 후 게임에서 `/bq reload`, `/설정리로드`를 입력하면 됩니다. 자바 소스가 바뀐 경우에만 리빌드가 필요합니다.
 
 > ⚠️ `/reload`는 새로 빌드한 jar를 다시 읽지 않으므로, 코드가 바뀐 뒤에는 서버를 완전히 재시작해야 합니다.
 
 ## 📚 문서
 
+- [docs/기획팀_가이드.md](docs/기획팀_가이드.md) — 기획팀용: 아이템·NPC·퀘스트 추가 방법
 - [docs/NPC_LIST.md](docs/NPC_LIST.md) — NPC ID 매핑 가이드
 - [docs/ITEM_LIST.md](docs/ITEM_LIST.md) — 커스텀 아이템 목록 및 지급 방법
 - [docs/TUTORIAL_GUIDE.md](docs/TUTORIAL_GUIDE.md) — 신입생 튜토리얼 가이드
 - [docs/WORLDVIEW.md](docs/WORLDVIEW.md) — 세계관/설정
-- [configs/README.md](configs/README.md) — 사전 구성 파일 적용 방법
+- [configs/README.md](configs/README.md) — 기획 파일 폴더 구조와 `배포.bat` 사용 방법
 
 ## 🌿 브랜치 전략
 

@@ -1,6 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.auth;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import kr.ishs.raibit.ishsMinecraftRpg.MapConfig;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -40,6 +41,8 @@ public class AuthManager {
 
     private static final int MAX_FAIL = 5;
 
+    // 인증 사용 여부, 인증 대기소, 최초 스폰 좌표는 config.yml에서 읽는다. (MapConfig 참고)
+
     public AuthManager(IshsMinecraftRpg plugin) {
         this.plugin = plugin;
         this.riroAuth = new RiroSchoolAuth(plugin.getLogger());
@@ -48,20 +51,27 @@ public class AuthManager {
     /** 플레이어가 서버에 접속했을 때 초기화 */
     public void startAuth(Player player) {
         UUID uuid = player.getUniqueId();
+
+        // 인증 비활성화 시 대기소 이동 없이 바로 인증 완료 처리
+        if (!MapConfig.authEnabled) {
+            authSteps.put(uuid, AuthStep.AUTHENTICATED);
+            return;
+        }
+
         authSteps.put(uuid, AuthStep.WAITING_ID);
         pendingUserId.remove(uuid);
         failCount.put(uuid, 0);
 
         // 현재 위치 저장 (인증 대기소에 있는 경우 무시)
         org.bukkit.Location currentLoc = player.getLocation();
-        boolean isAuthSpawn = Math.abs(currentLoc.getX() - (-117)) < 5 && Math.abs(currentLoc.getZ() - 0) < 5;
+        boolean isAuthSpawn = Math.abs(currentLoc.getX() - MapConfig.authX) < MapConfig.authLockHalf
+                && Math.abs(currentLoc.getZ() - MapConfig.authZ) < MapConfig.authLockHalf;
         if (!isAuthSpawn) {
             preAuthLocations.put(uuid, currentLoc);
         }
 
         // 로그인 전 대기소로 이동 및 모험 모드 변경
-        org.bukkit.Location authSpawn = new org.bukkit.Location(player.getWorld(), -117.5, -50.0, 0.5);
-        player.teleport(authSpawn);
+        player.teleport(MapConfig.authLocation(player.getWorld()));
         player.setGameMode(org.bukkit.GameMode.ADVENTURE);
 
         sendAuthPrompt(player);
@@ -170,9 +180,8 @@ public class AuthManager {
         boolean firstTime = !player.hasPlayedBefore();
         
         if (firstTime || orig == null) {
-            // 최초 접속이거나, 이전 데이터 없이 대기실에서 로그아웃 한 경우 최초 인증 스폰으로 (-117, -50, 0)
-            org.bukkit.Location firstAuth = new org.bukkit.Location(player.getWorld(), -117.5, -50.0, 0.5);
-            player.teleport(firstAuth);
+            // 최초 접속이거나, 이전 데이터 없이 대기실에서 로그아웃 한 경우 config.yml의 최초 스폰으로
+            player.teleport(MapConfig.firstSpawnLocation(player.getWorld()));
         } else {
             // 인증 2회차 이상 (마지막 플레이 위치 복구)
             player.teleport(orig);

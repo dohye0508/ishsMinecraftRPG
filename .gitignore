@@ -17,3 +17,6 @@ riroschoolauth.py
 
 # Others
 *.log
+
+# 이 PC의 서버 경로 (사람마다 다름)
+configs/server-path.txt

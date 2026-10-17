@@ -1,0 +1,106 @@
+# ============================================================
+#  도전과제(업적) 목록 (기획팀이 직접 수정하는 파일)
+# ============================================================
+#  - /도전과제 GUI에 보이는 문구와, 달성했을 때 화면에 뜨는 알림 문구를 모두 여기서 고칩니다.
+#  - 값을 고친 뒤 게임에서 OP가  /설정리로드  를 입력하면 적용됩니다.
+#  - 문구에는 색상 코드(&a, &c 등)를 쓸 수 있습니다.
+#
+#  [중요] 도전과제의 "달성 조건"은 ID에 코드가 연결되어 있습니다. (ID는 바꾸지 마세요)
+#    join_club    동아리 가입                 diamond      다이아몬드 광석 채굴
+#    lumberjack   원목 채집                   first_kill   첫 몬스터 사냥
+#    stat_up      스탯 투자                   first_death  첫 사망
+#    pvp_win      타 동아리원과 PvP 승리       club_coop    동아리원과 함께 몬스터 처치
+#    first_npc    NPC 대화 (first_npc_ 로 시작하는 달성 기록의 개수를 셉니다)
+#    level_5, level_10, level_20, level_50   해당 레벨 도달
+#  ※ join_club, stat_up, first_npc 는 현재 달성 처리 코드가 없어 항상 미달성으로 보입니다.
+#    (개발자에게 달성 조건 연결을 요청하세요)
+#
+#  항목 설명
+#    material      달성했을 때 GUI에 보이는 아이템 (마인크래프트 영어 이름, 대문자)
+#    title         도전과제 이름
+#    description   GUI 설명문. 마지막 줄 {count} 는 달성한 개수로 바뀝니다 (first_npc 전용)
+#    popup         달성했을 때 화면에 뜨는 문구. 없으면 description을 씁니다
+#    show-in-gui   false면 /도전과제 GUI 목록에 보이지 않습니다 (기본값 true)
+#    count-prefix  이 글자로 시작하는 달성 기록의 개수를 세는 항목 (first_npc 전용)
+# ============================================================
+
+# GUI에 쓰이는 공통 문구
+texts:
+  locked-description: "아직 밝혀지지 않은 업적입니다."
+  unlocked-label: "✔ 달성 완료"
+  locked-label: "✘ 미달성"
+  progress-title: "달성 현황"
+
+# 순서대로 GUI에 표시됩니다. (한 화면에 9개를 넘기면 칸 배치가 자동으로 넓어집니다)
+achievements:
+  join_club:
+    material: TOTEM_OF_UNDYING
+    title: "인천과학고 입학"
+    description: "동아리를 선택하여 무사히 입학 완료!"
+
+  diamond:
+    material: DIAMOND
+    title: "진짜 보물 찾기"
+    description: "깊은 곳에서 다이아몬드를 발견했습니다."
+
+  lumberjack:
+    material: OAK_LOG
+    title: "나무꾼의 길"
+    description: "처음으로 원목을 채집했습니다."
+
+  first_kill:
+    material: ZOMBIE_HEAD
+    title: "학업 스트레스 해소"
+    description: "처음으로 몬스터를 사냥했습니다!"
+
+  stat_up:
+    material: EXPERIENCE_BOTTLE
+    title: "자기계발의 시작"
+    description: "나만의 길을 걷기 위해 스탯을 올렸습니다."
+
+  first_death:
+    material: SKELETON_SKULL
+    title: "잠시 쉬어가도 좋아"
+    description: "가끔은 쓰러져도 괜찮습니다."
+    popup: "너무 무리하지 마세요!"
+
+  pvp_win:
+    material: IRON_SWORD
+    title: "동아리의 자랑"
+    description: "타 동아리원과의 전투에서 승리했습니다!"
+
+  club_coop:
+    material: GOLDEN_APPLE
+    title: "우리는 하나"
+    description: "동아리원과 함께 몬스터를 처치했습니다!"
+
+  first_npc:
+    material: EMERALD
+    title: "NPC와의 조우"
+    description: "서버의 특별한 NPC들과 {count}명 만남!"
+    count-prefix: "first_npc_"
+
+  # ---- 아래는 달성 알림만 사용하고 /도전과제 GUI에는 보이지 않습니다 (show-in-gui: false) ----
+  level_5:
+    material: PAPER
+    title: "신입의 눈빛"
+    description: "레벨 5에 도달했습니다."
+    show-in-gui: false
+
+  level_10:
+    material: PAPER
+    title: "과학고생다워지는 중"
+    description: "레벨 10에 도달했습니다."
+    show-in-gui: false
+
+  level_20:
+    material: PAPER
+    title: "이젠 선배"
+    description: "레벨 20에 도달했습니다."
+    show-in-gui: false
+
+  level_50:
+    material: PAPER
+    title: "전설의 시작"
+    description: "레벨 50에 도달했습니다."
+    show-in-gui: false

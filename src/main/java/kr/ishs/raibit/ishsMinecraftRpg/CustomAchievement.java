@@ -6,7 +6,18 @@ import org.bukkit.entity.Player;
 
 public class CustomAchievement {
 
+    /**
+     * 도전과제를 달성 처리합니다.
+     * title/subtitle 은 achievements.yml 에 같은 ID가 없을 때만 쓰이는 기본 문구입니다.
+     * (ID가 있으면 achievements.yml 의 title/popup 문구를 사용합니다)
+     */
     public static boolean grant(Player p, String trackId, String title, String subtitle) {
+        AchievementConfig.Def def = AchievementConfig.get(trackId);
+        if (def != null) {
+            title = def.title;
+            subtitle = def.popup;
+        }
+
         kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pd = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(p);
         if (pd != null) {
             if (pd.hasAchievement(trackId)) return false; // 이미 달성함

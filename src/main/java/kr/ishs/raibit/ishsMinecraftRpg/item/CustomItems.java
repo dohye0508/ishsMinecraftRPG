@@ -3,15 +3,25 @@ package kr.ishs.raibit.ishsMinecraftRpg.item;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
+/**
+ * 커스텀 아이템. 이름, 재료, 설명은 items.yml에서 읽는다. (기획팀이 코드 없이 수정 가능)
+ * 아이템 효과는 아이템 ID에 코드가 연결되어 있다. (CustomItemListener 참고)
+ */
 public class CustomItems {
+    // 효과가 코드로 연결된 아이템 ID. ID를 바꾸면 효과가 사라지므로 items.yml에서 ID는 바꾸지 말 것.
     public static final String DEMERIT_CARD = "demerit_card";
     public static final String WANIL_STAFF = "wanil_staff";
     public static final String JASMINE_FLOWER = "jasmine_flower";
@@ -19,75 +29,90 @@ public class CustomItems {
     public static final String CHANGBONG_SPEAR = "changbong_spear";
     public static final String CHANGBONG_ROD = "changbong_rod";
 
-    public static final List<String> ALL_IDS = Arrays.asList(
-            DEMERIT_CARD, WANIL_STAFF, JASMINE_FLOWER, SCHEMA, CHANGBONG_SPEAR, CHANGBONG_ROD);
-
     private static NamespacedKey key;
+    private static Logger logger;
+
+    /** items.yml에서 읽은 아이템 정의 (ID는 소문자) */
+    private static final Map<String, Def> DEFS = new LinkedHashMap<>();
+
+    private static class Def {
+        final Material material;
+        final String name;
+        final List<String> lore;
+        final boolean unbreakable;
+
+        Def(Material material, String name, List<String> lore, boolean unbreakable) {
+            this.material = material;
+            this.name = name;
+            this.lore = lore;
+            this.unbreakable = unbreakable;
+        }
+    }
 
     public static void init(Plugin plugin) {
         key = new NamespacedKey(plugin, "ishsrpg_item");
+        logger = plugin.getLogger();
     }
 
     public static NamespacedKey getKey() {
         return key;
     }
 
-    public static ItemStack create(String id) {
-        if (id == null) return null;
-        switch (id.toLowerCase()) {
-            case DEMERIT_CARD:
-                return build(Material.PAPER, ChatColor.RED + "왕사감의 벌점카드",
-                        Arrays.asList(
-                                ChatColor.GRAY + "왕사감 선생님의 위압적인 손길이 담긴 카드.",
-                                ChatColor.GRAY + "이 카드에 찍히는 자, 정신이 아득해진다.",
-                                "",
-                                ChatColor.DARK_RED + "공격 적중 시 대상에게 약화 효과 부여"
-                        ), DEMERIT_CARD, true);
-            case WANIL_STAFF:
-                return build(Material.STICK, ChatColor.AQUA + "완일쌤의 지팡이",
-                        Arrays.asList(
-                                ChatColor.GRAY + "평범해 보이지만 완일쌤의 손때가 묻은 무기.",
-                                ChatColor.GRAY + "특별한 힘은 없지만 그 자체로 믿음직스럽다."
-                        ), WANIL_STAFF, true);
-            case JASMINE_FLOWER:
-                return build(Material.AZURE_BLUET, ChatColor.LIGHT_PURPLE + "자스민 꽃",
-                        Arrays.asList(
-                                ChatColor.GRAY + "으깨어 상처에 바르면 통증이 가라앉는다.",
-                                "",
-                                ChatColor.LIGHT_PURPLE + "우클릭 시 체력 회복 (소모품)"
-                        ), JASMINE_FLOWER, false);
-            case SCHEMA:
-                return build(Material.BOOK, ChatColor.GOLD + "스키마",
-                        Arrays.asList(
-                                ChatColor.GRAY + "정신을 각성시키는 비전의 공식.",
-                                "",
-                                ChatColor.GOLD + "우클릭 시 일정 시간 무기 강화 및 이동속도 증가 (소모품)"
-                        ), SCHEMA, false);
-            case CHANGBONG_SPEAR:
-                return build(Material.TRIDENT, ChatColor.DARK_AQUA + "이창봉도 창이다",
-                        Arrays.asList(
-                                ChatColor.GRAY + "이창봉 선생님의 이름처럼, 이 창도 창이다.",
-                                "",
-                                ChatColor.DARK_AQUA + "공격 적중 시 대상을 강하게 찔러 밀쳐낸다"
-                        ), CHANGBONG_SPEAR, true);
-            case CHANGBONG_ROD:
-                return build(Material.BLAZE_ROD, ChatColor.GOLD + "이창봉도 봉이다",
-                        Arrays.asList(
-                                ChatColor.GRAY + "이창봉 선생님의 이름처럼, 이 봉도 봉이다.",
-                                "",
-                                ChatColor.GOLD + "공격 적중 시 대상을 후려쳐 하늘로 띄운다"
-                        ), CHANGBONG_ROD, true);
-            default:
-                return null;
+    /** items.yml의 items 항목을 읽어 아이템 정의를 갱신합니다. */
+    public static void load(FileConfiguration config) {
+        DEFS.clear();
+        ConfigurationSection items = config.getConfigurationSection("items");
+        if (items == null) {
+            if (logger != null) logger.warning("[items.yml] items 항목이 없습니다. 커스텀 아이템이 없습니다.");
+            return;
+        }
+
+        for (String id : items.getKeys(false)) {
+            ConfigurationSection section = items.getConfigurationSection(id);
+            if (section == null) continue;
+
+            String materialName = section.getString("material", "");
+            Material material = Material.matchMaterial(materialName);
+            if (material == null || material.isAir()) {
+                if (logger != null) {
+                    logger.warning("[items.yml] '" + id + "' 아이템의 material '" + materialName
+                            + "' 을(를) 찾을 수 없어 건너뜁니다. (영어 대문자 재료 이름인지 확인하세요)");
+                }
+                continue;
+            }
+
+            String name = color(section.getString("name", id));
+            List<String> lore = new ArrayList<>();
+            for (String line : section.getStringList("lore")) lore.add(color(line));
+
+            DEFS.put(id.toLowerCase(), new Def(material, name, lore, section.getBoolean("unbreakable", false)));
         }
     }
 
-    private static ItemStack build(Material material, String name, List<String> lore, String id, boolean unbreakable) {
-        ItemStack item = new ItemStack(material, 1);
+    /** 지급 가능한 아이템 ID 목록 */
+    public static List<String> getIds() {
+        return new ArrayList<>(DEFS.keySet());
+    }
+
+    public static ItemStack create(String id) {
+        if (id == null) return null;
+        Def def = DEFS.get(id.toLowerCase());
+        if (def == null) return null;
+        return build(def, id.toLowerCase());
+    }
+
+    @SuppressWarnings("deprecation")
+    private static String color(String text) {
+        return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static ItemStack build(Def def, String id) {
+        ItemStack item = new ItemStack(def.material, 1);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        meta.setLore(lore);
-        meta.setUnbreakable(unbreakable);
+        meta.setDisplayName(def.name);
+        meta.setLore(new ArrayList<>(def.lore));
+        meta.setUnbreakable(def.unbreakable);
         // 일반 바닐라 아이템과 구별되도록 마법부여 반짝임 테두리 효과를 부여 (실제 마법부여는 없음)
         meta.setEnchantmentGlintOverride(true);
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, id);

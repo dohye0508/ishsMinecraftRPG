@@ -5,6 +5,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 import java.util.LinkedHashMap;
@@ -12,18 +14,21 @@ import java.util.Map;
 
 public class QuestCommand implements CommandExecutor {
     // BetonQuest 오브젝티브 ID -> 표시용 이름
-    // configs/BetonQuest/QuestPackages/default/main.yml 의 objectives 섹션과 짝이 맞아야 함
+    // config.yml 의 quests 항목에서 읽는다. (코드 수정 없이 기획팀이 추가/수정 가능)
+    // 키는 BetonQuest QuestPackages/default/main.yml 의 objectives 섹션 ID와 짝이 맞아야 한다.
     private static final Map<String, String> QUEST_NAMES = new LinkedHashMap<>();
-    static {
-        QUEST_NAMES.put("logic_quest_obj", "LOGIC 부짱 - 좀비 사냥");
-        QUEST_NAMES.put("win_quest_obj", "WIN 부짱 - 스켈레톤 사냥");
-        QUEST_NAMES.put("tnt_quest_obj", "TNT 부짱 - 크리퍼 사냥");
-        QUEST_NAMES.put("lottol_quest_obj", "LOTTOL 부짱 - 거미 사냥");
-        QUEST_NAMES.put("quasar_quest_obj", "QUASAR 부짱 - 돌 채굴");
-        QUEST_NAMES.put("raibit_quest_obj", "RAIBIT 부짱 - 레드스톤 광석 채굴");
-        QUEST_NAMES.put("plutonium_quest_obj", "PLUTONIUM 부짱 - 철 광석 채굴");
-        QUEST_NAMES.put("dorm1_quest_obj", "1학년 사감쌤 - 빵 제작");
-        QUEST_NAMES.put("dorm2_quest_obj", "2학년 사감쌤 - 다이아몬드 채굴");
+
+    /** config.yml 의 quests 항목을 읽어 표시 이름 목록을 갱신합니다. */
+    public static void loadQuestNames(FileConfiguration config) {
+        QUEST_NAMES.clear();
+        ConfigurationSection section = config.getConfigurationSection("quests");
+        if (section == null) return;
+        for (String objectiveId : section.getKeys(false)) {
+            String displayName = section.getString(objectiveId);
+            if (displayName != null && !displayName.isBlank()) {
+                QUEST_NAMES.put(objectiveId, displayName);
+            }
+        }
     }
 
     @Override

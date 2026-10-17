@@ -19,7 +19,7 @@ public class CustomItemCommand implements CommandExecutor {
 
         if (args.length < 2) {
             sender.sendMessage(ChatColor.YELLOW + "사용법: /아이템지급 [플레이어] [아이템ID]");
-            sender.sendMessage(ChatColor.GRAY + "아이템ID: " + String.join(", ", CustomItems.ALL_IDS));
+            sender.sendMessage(ChatColor.GRAY + "아이템ID: " + String.join(", ", CustomItems.getIds()));
             return true;
         }
 
@@ -32,7 +32,7 @@ public class CustomItemCommand implements CommandExecutor {
         ItemStack item = CustomItems.create(args[1]);
         if (item == null) {
             sender.sendMessage(ChatColor.RED + "존재하지 않는 아이템ID입니다: " + args[1]);
-            sender.sendMessage(ChatColor.GRAY + "아이템ID: " + String.join(", ", CustomItems.ALL_IDS));
+            sender.sendMessage(ChatColor.GRAY + "아이템ID: " + String.join(", ", CustomItems.getIds()));
             return true;
         }
 
