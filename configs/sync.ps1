@@ -33,8 +33,10 @@ $plugins = Join-Path $serverRoot 'plugins'
 # ---------- 동기화 대상 ----------
 # Repo   : configs 안의 폴더,  Server : plugins 안의 폴더
 $maps = @(
-    @{ Repo = 'ishsMinecraftRpg';                 Server = 'ishsMinecraftRpg';                 Filter = @('config.yml', 'items.yml', 'achievements.yml', 'help.yml'); Recurse = $false; Exclude = @() },
-    @{ Repo = 'BetonQuest\QuestPackages\default'; Server = 'BetonQuest\QuestPackages\default'; Filter = @('*.yml');                                                   Recurse = $true;  Exclude = @() },
+    @{ Repo = 'ishsMinecraftRpg';                 Server = 'ishsMinecraftRpg';                 Filter = @('*.yml');                                                    Recurse = $false; Exclude = @() },
+    @{ Repo = 'BetonQuest';                       Server = 'BetonQuest';                       Filter = @('config.yml');                                              Recurse = $false; Exclude = @() },
+    @{ Repo = 'BetonQuest\lang';                  Server = 'BetonQuest\lang';                  Filter = @('ko-KR.yml');                                               Recurse = $false; Exclude = @() },
+    @{ Repo = 'BetonQuest\QuestPackages\default'; Server = 'BetonQuest\QuestPackages\default'; Filter = @('*.yml');                                                   Recurse = $true;  Exclude = @('npcs_generated.yml') },
     @{ Repo = 'MythicMobs\Mobs';                  Server = 'MythicMobs\Mobs';                  Filter = @('*.yml');                                                   Recurse = $false; Exclude = @('Example*.yml', 'VanillaMobs.yml') }
 )
 
@@ -54,9 +56,17 @@ $backupDir = Join-Path $serverRoot "backup_config\sync_$stamp"
 $changed   = 0
 $unchanged = 0
 
+# 줄바꿈(CRLF/LF) 차이는 무시하고 내용만 비교하기 위한 해시
+function Get-TextHash($path) {
+    $bytes = [System.IO.File]::ReadAllBytes($path)
+    $filtered = New-Object System.Collections.Generic.List[byte]
+    foreach ($b in $bytes) { if ($b -ne 13) { $filtered.Add($b) } }
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    return [System.BitConverter]::ToString($sha.ComputeHash($filtered.ToArray()))
+}
 function Sync-One($src, $dst, $label) {
     $isNew = -not (Test-Path $dst)
-    if (-not $isNew -and ((Get-FileHash $src).Hash -eq (Get-FileHash $dst).Hash)) {
+    if (-not $isNew -and ((Get-TextHash $src) -eq (Get-TextHash $dst))) {
         $script:unchanged++
         return
     }

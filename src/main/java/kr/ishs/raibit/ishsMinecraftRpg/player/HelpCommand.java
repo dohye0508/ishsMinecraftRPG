@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -37,7 +38,7 @@ public class HelpCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("플레이어만 사용할 수 있습니다.");
+            Messages.send(sender, "common.players-only");
             return true;
         }
 

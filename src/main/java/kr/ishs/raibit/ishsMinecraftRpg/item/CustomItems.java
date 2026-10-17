@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.item;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Constants;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -17,17 +18,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * 커스텀 아이템. 이름, 재료, 설명은 items.yml에서 읽는다. (기획팀이 코드 없이 수정 가능)
- * 아이템 효과는 아이템 ID에 코드가 연결되어 있다. (CustomItemListener 참고)
+ * 커스텀 아이템. 이름, 재료, 설명과 효과(effects)는 모두 items.yml에서 읽는다.
+ * (기획팀이 코드 없이 수정 가능) 효과 발동은 CustomItemListener 가 담당한다.
  */
 public class CustomItems {
-    // 효과가 코드로 연결된 아이템 ID. ID를 바꾸면 효과가 사라지므로 items.yml에서 ID는 바꾸지 말 것.
-    public static final String DEMERIT_CARD = "demerit_card";
-    public static final String WANIL_STAFF = "wanil_staff";
-    public static final String JASMINE_FLOWER = "jasmine_flower";
-    public static final String SCHEMA = "schema";
-    public static final String CHANGBONG_SPEAR = "changbong_spear";
-    public static final String CHANGBONG_ROD = "changbong_rod";
 
     private static NamespacedKey key;
     private static Logger logger;
@@ -40,12 +34,14 @@ public class CustomItems {
         final String name;
         final List<String> lore;
         final boolean unbreakable;
+        final List<ItemEffect> effects;
 
-        Def(Material material, String name, List<String> lore, boolean unbreakable) {
+        Def(Material material, String name, List<String> lore, boolean unbreakable, List<ItemEffect> effects) {
             this.material = material;
             this.name = name;
             this.lore = lore;
             this.unbreakable = unbreakable;
+            this.effects = effects;
         }
     }
 
@@ -73,7 +69,7 @@ public class CustomItems {
 
             String materialName = section.getString("material", "");
             Material material = Material.matchMaterial(materialName);
-            if (material == null || material.isAir()) {
+            if (material == null || Constants.isAir(material)) {
                 if (logger != null) {
                     logger.warning("[items.yml] '" + id + "' 아이템의 material '" + materialName
                             + "' 을(를) 찾을 수 없어 건너뜁니다. (영어 대문자 재료 이름인지 확인하세요)");
@@ -85,8 +81,21 @@ public class CustomItems {
             List<String> lore = new ArrayList<>();
             for (String line : section.getStringList("lore")) lore.add(color(line));
 
-            DEFS.put(id.toLowerCase(), new Def(material, name, lore, section.getBoolean("unbreakable", false)));
+            List<ItemEffect> effects = new ArrayList<>();
+            for (Map<?, ?> rawEffect : section.getMapList("effects")) {
+                ItemEffect effect = ItemEffect.parse(id, rawEffect, logger);
+                if (effect != null) effects.add(effect);
+            }
+
+            DEFS.put(id.toLowerCase(), new Def(material, name, lore, section.getBoolean("unbreakable", false), effects));
         }
+    }
+
+    /** 아이템 ID에 설정된 효과 목록 (없으면 빈 목록) */
+    public static List<ItemEffect> getEffects(String id) {
+        if (id == null) return new ArrayList<>();
+        Def def = DEFS.get(id.toLowerCase());
+        return def == null ? new ArrayList<>() : def.effects;
     }
 
     /** 지급 가능한 아이템 ID 목록 */

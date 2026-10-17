@@ -3,18 +3,23 @@ package kr.ishs.raibit.ishsMinecraftRpg;
 import kr.ishs.raibit.ishsMinecraftRpg.auth.AuthCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.auth.AuthListener;
 import kr.ishs.raibit.ishsMinecraftRpg.auth.AuthManager;
+import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderListener;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.StatListener;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcCommand;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcManager;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcStartupListener;
 import kr.ishs.raibit.ishsMinecraftRpg.player.*;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItems;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItemListener;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItemCommand;
-import kr.ishs.raibit.ishsMinecraftRpg.stat.GameConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatManager;
 import kr.ishs.raibit.ishsMinecraftRpg.task.RpgUpdateTask;
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -22,6 +27,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 
 public final class IshsMinecraftRpg extends JavaPlugin {
 
@@ -30,6 +39,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
     private StatManager statManager;
     private SkillManager skillManager;
     private RpgListener rpgListener;
+    private NpcManager npcManager;
 
     @Override
     public void onEnable() {
@@ -38,11 +48,8 @@ public final class IshsMinecraftRpg extends JavaPlugin {
             getDataFolder().mkdirs();
         }
 
-        // config.yml 로드 (캐릭터 최초 생성 시 기본 스탯 등)
+        // config.yml 이 없으면 기본 파일 생성
         saveDefaultConfig();
-        GameConfig.load(getConfig());
-        MapConfig.load(getConfig());
-        QuestCommand.loadQuestNames(getConfig());
 
         // Manager 초기화
         playerManager = PlayerManager.getInstance();
@@ -53,8 +60,8 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         // 커스텀 아이템 태그 초기화
         CustomItems.init(this);
 
-        // items.yml / achievements.yml / help.yml 로드 (없으면 기본 파일 생성)
-        reloadContent();
+        // 모든 설정 파일 로드 (없는 파일은 기본 파일을 만들어 둔다)
+        reloadAll();
 
         // 서버에 이미 접속 중인 플레이어가 있다면(리로드 등) 로드
         for (Player p : getServer().getOnlinePlayers()) {
@@ -70,7 +77,6 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         MapBorderListener mapBorderListener = new MapBorderListener(authManager);
         getServer().getPluginManager().registerEvents(mapBorderListener, this);
         mapBorderListener.startVisualTask(this); // 플레이어별 가상 월드보더로 직사각형 경계를 파란 벽으로 표시
-        // listener 패키지의 StatListener만 등록하여 중복을 제거합니다.
         getServer().getPluginManager().registerEvents(new StatListener(playerManager, statManager), this);
         getServer().getPluginManager().registerEvents(new ClubListener(), this);
         getServer().getPluginManager().registerEvents(skillManager, this);
@@ -89,6 +95,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("퀘스트").setExecutor(new QuestCommand());
         getCommand("아이템지급").setExecutor(new CustomItemCommand());
         getCommand("입장허용").setExecutor(new EntryGateCommand(rpgListener));
+        getCommand("엔피씨").setExecutor(new NpcCommand(this));
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));
 
         // PlaceholderAPI가 설치되어 있다면 연동
@@ -104,27 +111,68 @@ public final class IshsMinecraftRpg extends JavaPlugin {
             applyWorldSettings(world);
         }
 
-        getLogger().info("ISHSMinecraftRpg 활성화 완료 (스탯 시스템 및 UI 포함)");
+        // NPC 는 Citizens 가 저장된 NPC 를 모두 불러온 뒤(서버 시작이 끝난 뒤)에 npcs.yml 대로 맞춘다
+        npcManager = new NpcManager(this);
+        if (getServer().getPluginManager().getPlugin("Citizens") != null) {
+            getServer().getPluginManager().registerEvents(new NpcStartupListener(this), this);
+        }
+
+        getLogger().info("ISHSMinecraftRpg 활성화 완료 (동아리 " + ClubConfig.all().size()
+                + "개, 아이템 " + CustomItems.getIds().size() + "종, 도전과제 " + AchievementConfig.all().size()
+                + "개, 스킬 " + skillManager.skillCount() + "개 로드)");
     }
 
     public AuthManager getAuthManager() {
         return authManager;
     }
 
-    /** 플러그인 폴더의 YAML 파일을 읽습니다. 파일이 없으면 jar 안의 기본 파일을 먼저 복사합니다. */
+    public StatManager getStatManager() {
+        return statManager;
+    }
+
+    /**
+     * 플러그인 폴더의 YAML 파일을 읽습니다. 파일이 없으면 jar 안의 기본 파일을 먼저 복사합니다.
+     * 파일에서 빠진 항목은 jar 안의 기본 파일 값으로 채워지므로, 코드에 기본 숫자를 따로 두지 않아도 됩니다.
+     */
     public FileConfiguration loadYaml(String fileName) {
         File file = new File(getDataFolder(), fileName);
         if (!file.exists()) {
             saveResource(fileName, false);
         }
-        return YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+        try (InputStream in = getResource(fileName)) {
+            if (in != null) {
+                config.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8)));
+            }
+        } catch (IOException e) {
+            getLogger().warning("[" + fileName + "] 기본값을 읽지 못했습니다: " + e.getMessage());
+        }
+        return config;
     }
 
-    /** items.yml / achievements.yml / help.yml 을 다시 읽어 반영합니다. (/설정리로드 에서도 사용) */
+    /** config.yml 과 모든 설정 파일(messages, gameplay, clubs, items, achievements, help, skills)을 다시 읽습니다. */
+    public void reloadAll() {
+        reloadConfig();
+        MapConfig.load(getConfig());
+        QuestCommand.loadQuestNames(getConfig());
+        reloadContent();
+    }
+
+    /** npcs.yml 을 다시 읽어 게임 안 NPC 를 그 내용대로 만들고, 옮기고, 지웁니다. @return 반영된 NPC 수 (Citizens 가 없으면 -1) */
+    public int reloadNpcs() {
+        NpcConfig.load(loadYaml("npcs.yml"), getLogger());
+        return npcManager.sync();
+    }
+
+    /** config.yml 을 제외한 설정 파일들을 다시 읽어 반영합니다. */
     public void reloadContent() {
+        Messages.load(loadYaml("messages.yml"), getLogger());
+        GameplayConfig.load(loadYaml("gameplay.yml"), getLogger());
+        ClubConfig.load(loadYaml("clubs.yml"), getLogger());
         CustomItems.load(loadYaml("items.yml"));
         AchievementConfig.load(loadYaml("achievements.yml"), getLogger());
         HelpCommand.load(loadYaml("help.yml"));
+        skillManager.load(loadYaml("skills.yml"), getLogger());
     }
 
     @Override
@@ -132,26 +180,18 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         playerManager.saveAll();
     }
 
-    @SuppressWarnings("removal")
+    /** 월드 설정 적용: 게임 규칙과 날씨는 gameplay.yml 의 world, 월드 스폰은 config.yml 의 spawn.first */
     public void applyWorldSettings(World world) {
         if (world == null) return;
 
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.MOB_GRIEFING, false);
-        world.setGameRule(GameRule.DO_FIRE_TICK, false);
-        world.setGameRule(GameRule.NATURAL_REGENERATION, false); // 커스텀 회복을 위해 false로 설정
-        world.setGameRule(GameRule.RANDOM_TICK_SPEED, 3);
-        world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        boolean overworld = world.getEnvironment() == World.Environment.NORMAL;
+        GameplayConfig.applyWorldRules(world, overworld, getLogger());
 
         // 바닐라 월드보더(정사각형)는 쓰지 않는다. 직사각형 경계는 MapBorderListener가 처리한다.
-        // 주의: 맵 위치(좌표)가 나중에 바뀔 수 있으니 MapBorderListener, AuthManager의 좌표를 다시 확인할 것
+        // 주의: 맵 위치(좌표)가 나중에 바뀔 수 있으니 config.yml 의 border, spawn, auth 좌표를 다시 확인할 것
         try {
-            if (world.getEnvironment() == World.Environment.NORMAL) {
-                world.setSpawnLocation(MapConfig.firstSpawnLocation(world)); // config.yml 의 최초 스폰
-                world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
-                world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-                world.setStorm(false);
-                world.setThundering(false);
+            if (overworld) {
+                world.setSpawnLocation(MapConfig.firstSpawnLocation(world));
             }
         } catch (Throwable ignored) {}
     }

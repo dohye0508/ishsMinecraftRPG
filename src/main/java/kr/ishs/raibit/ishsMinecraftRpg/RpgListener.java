@@ -1,14 +1,22 @@
 package kr.ishs.raibit.ishsMinecraftRpg;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.gui.PluginGui;
+import kr.ishs.raibit.ishsMinecraftRpg.player.ExpManager;
+import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
-
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.entity.Bat;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.Bat;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -21,13 +29,15 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.TimeSkipEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 
+/**
+ * 공용 이벤트 리스너. 보상 수치, 도전과제 연결, 게임 규칙은 gameplay.yml, 문구는 messages.yml 에서 온다.
+ */
 public class RpgListener implements Listener {
 
     private final IshsMinecraftRpg plugin;
@@ -62,54 +72,49 @@ public class RpgListener implements Listener {
      * 서버는 열려 있어도 관리자가 입장을 아직 허용하지 않았다면 OP를 제외한 모든 접속을 차단한다.
      * 이미 접속중인 플레이어는 영향을 받지 않는다 (신규 로그인만 차단).
      */
+    @SuppressWarnings("deprecation")
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPreLogin(AsyncPlayerPreLoginEvent event) {
         if (isEntryOpen) return;
         if (Bukkit.getOfflinePlayer(event.getUniqueId()).isOp()) return;
 
-        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
-                ChatColor.RED + "" + ChatColor.BOLD + "⛔ 입장 제한\n\n"
-                        + ChatColor.WHITE + "서버가 활성화됐지만\n"
-                        + ChatColor.WHITE + "관리자가 아직 입장을 허용하지 않았습니다.\n\n"
-                        + ChatColor.GRAY + "잠시 후 다시 접속해주세요.");
+        event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, Messages.get("entry.denied"));
     }
 
     /**
-     * 블록 파괴 방지 (isBuildProtectionEnabled가 false이므로 통과됨)
+     * 블록 파괴. 서바이벌에서 파괴 가능한지는 gameplay.yml 의 rules.survival-block-break,
+     * 채굴 보상은 rewards.mining 을 따른다.
      */
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         Player p = event.getPlayer();
-        // 서바이벌 모드에서는 전투(때리기)만 가능하고 블록 채굴/파괴는 불가능하게 막는다.
-        if (p.getGameMode() == org.bukkit.GameMode.SURVIVAL) {
+        // 기본 규칙: 서바이벌 모드에서는 전투(때리기)만 가능하고 블록 채굴/파괴는 불가능하다.
+        if (p.getGameMode() == GameMode.SURVIVAL && !GameplayConfig.survivalBlockBreak) {
             event.setCancelled(true);
             return;
         }
 
         if (!isBuildProtectionEnabled) {
-            if (event.getBlock().getType() == org.bukkit.Material.DIAMOND_ORE || event.getBlock().getType() == org.bukkit.Material.DEEPSLATE_DIAMOND_ORE) {
-                kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(p, "diamond", "진짜 보물 찾기", "깊은 곳에서 다이아몬드를 발견했습니다.");
-                kr.ishs.raibit.ishsMinecraftRpg.player.ExpManager.addExp(p, 30); // 다이아 채광 +30 EXP
+            Material type = event.getBlock().getType();
+            for (GameplayConfig.MiningSpecial special : GameplayConfig.miningSpecials()) {
+                if (!special.matches(type)) continue;
+                CustomAchievement.grant(p, special.achievement);
+                if (special.exp > 0) ExpManager.addExp(p, special.exp);
             }
-            if (event.getBlock().getType().toString().contains("LOG")) {
-                kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(p, "lumberjack", "나무꾼의 길", "처음으로 원목을 채집했습니다.");
-            }
-            
-            // 모든 체광 +2 EXP, +5% 확률 스탯 포인트
-            kr.ishs.raibit.ishsMinecraftRpg.player.ExpManager.addExp(p, 2);
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pd = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(p);
-            if (pd != null && Math.random() < 0.05) {
-                pd.addStatPoints(1);
-                p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR, 
-                        new net.md_5.bungee.api.chat.TextComponent(org.bukkit.ChatColor.AQUA + "채광/벌목 중 스탯 포인트를 1 발견했습니다!"));
+
+            // 모든 채굴 보상 + 확률로 스탯 포인트
+            ExpManager.addExp(p, GameplayConfig.miningExp);
+            PlayerData pd = PlayerManager.getInstance().getPlayerData(p);
+            if (pd != null && Math.random() < GameplayConfig.miningStatPointChance) {
+                pd.addStatPoints(GameplayConfig.miningStatPoints);
+                actionBar(p, Messages.get("reward.mining-stat-point", "points", GameplayConfig.miningStatPoints));
             }
             return;
         }
 
-        Player player = event.getPlayer();
-        if (!player.isOp()) {
+        if (!p.isOp()) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "블록을 부술 권한이 없습니다.");
+            Messages.send(p, "build.no-break");
         }
     }
 
@@ -123,7 +128,7 @@ public class RpgListener implements Listener {
         Player player = event.getPlayer();
         if (!player.isOp()) {
             event.setCancelled(true);
-            player.sendMessage(ChatColor.RED + "블록을 설치할 권한이 없습니다.");
+            Messages.send(player, "build.no-place");
         }
     }
 
@@ -137,6 +142,9 @@ public class RpgListener implements Listener {
         Player player = event.getPlayer();
         plugin.applyWorldSettings(player.getWorld());
         PlayerManager.getInstance().loadPlayer(player);
+        // 데이터를 불러온 직후에 스탯(최대 HP/MP, 걷기 속도)을 적용한다.
+        // (StatListener 의 접속 처리는 이 리스너보다 먼저 실행되어 데이터가 없는 상태라 적용이 건너뛰어진다)
+        plugin.getStatManager().applyStats(player);
         // 입장 메시지는 AuthListener(인증 완료 후)에서 처리
     }
 
@@ -149,41 +157,42 @@ public class RpgListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTimeSkip(TimeSkipEvent event) {
-        event.setCancelled(true);
+        if (!GameplayConfig.allowTimeSkip) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (GameplayConfig.spawnAnimals) return;
         if (event.getEntityType() == EntityType.BAT || event.getEntity() instanceof Bat || event.getEntity() instanceof Animals) {
             event.setCancelled(true);
         }
     }
 
-    @SuppressWarnings("deprecation")
+    /** 도전과제 창에서 아이템을 꺼내지 못하게 한다 */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        String title = event.getView().getTitle();
-        if (title != null && title.contains("[ 🏆 나의 도전과제 ]")) {
-            event.setCancelled(true); // 아이템 빼기 방지
+        if (PluginGui.is(event, PluginGui.Type.ACHIEVEMENTS)) {
+            event.setCancelled(true);
         }
     }
 
+    /** PvP 규칙: gameplay.yml 의 rules.pvp */
     @EventHandler
     public void onPvp(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player && event.getEntity() instanceof Player) {
             Player attacker = (Player) event.getDamager();
             Player victim = (Player) event.getEntity();
-            
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pdA = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(attacker);
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pdV = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(victim);
-            
+
+            PlayerData pdA = PlayerManager.getInstance().getPlayerData(attacker);
+            PlayerData pdV = PlayerManager.getInstance().getPlayerData(victim);
+
             if (pdA != null && pdV != null) {
-                // 동아리가 같으면 공격 불가
-                if (pdA.hasClub() && pdV.hasClub() && pdA.getClub().equals(pdV.getClub())) {
+                // 같은 동아리끼리는 공격 불가
+                if (GameplayConfig.pvpBlockSameClub && pdA.hasClub() && pdV.hasClub() && pdA.getClub().equals(pdV.getClub())) {
                     event.setCancelled(true);
-                } 
+                }
                 // 둘 중 하나라도 동아리가 없으면 공격 불가
-                else if (!pdA.hasClub() || !pdV.hasClub()) {
+                else if (GameplayConfig.pvpRequireClub && (!pdA.hasClub() || !pdV.hasClub())) {
                     event.setCancelled(true);
                 }
             } else {
@@ -194,73 +203,78 @@ public class RpgListener implements Listener {
 
     @EventHandler
     public void onExplode(EntityExplodeEvent event) {
-        event.blockList().clear();
+        if (!GameplayConfig.explosionBlockDamage) event.blockList().clear();
     }
 
+    /** 처치 보상: gameplay.yml 의 rewards.kill, rewards.club-coop */
     @EventHandler
     public void onEntityDeath(EntityDeathEvent event) {
-        if (event.getEntity().getKiller() != null) {
-            Player p = event.getEntity().getKiller();
-            // 첫 사냥 도전과제 & EXP 보상
-            kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(p, "first_kill", "학업 스트레스 해소", "처음으로 몬스터를 사냥했습니다!");
-            kr.ishs.raibit.ishsMinecraftRpg.player.ExpManager.addExp(p, 10); // 사냥 +10 EXP
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pd = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(p);
+        Player p = event.getEntity().getKiller();
+        if (p == null) return;
 
-            if (pd != null) {
-                // 사냥 시 20% 확률로 스탯 포인트 부여
-                if (Math.random() < 0.2) {
-                    pd.addStatPoints(1);
-                    p.spigot().sendMessage(net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
-                            new net.md_5.bungee.api.chat.TextComponent(org.bukkit.ChatColor.GOLD + "마력 스탯 포인트를 1 획득했습니다!"));
-                }
+        // 처치 도전과제 & EXP 보상
+        CustomAchievement.grant(p, GameplayConfig.killAchievement);
+        if (GameplayConfig.killExp > 0) ExpManager.addExp(p, GameplayConfig.killExp);
+        PlayerData pd = PlayerManager.getInstance().getPlayerData(p);
+        if (pd == null) return;
 
-                // 동아리 협동 쿼스트 확인
-                if (pd.hasClub() && event.getEntity() instanceof Monster) {
-                    for (org.bukkit.entity.Entity e : p.getNearbyEntities(15, 15, 15)) {
-                        if (e instanceof Player) {
-                            Player ally = (Player) e;
-                            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pdAlly = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(ally);
-                            if (pdAlly != null && pdAlly.hasClub() && pdAlly.getClub().equals(pd.getClub())) {
-                                kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(p, "club_coop", "우리는 하나", "동아리원과 함께 몬스터를 처치했습니다!");
-                                kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(ally, "club_coop", "우리는 하나", "동아리원과 함께 몬스터를 처치했습니다!");
-                                // 협동 시 파트너도 EXP 획득
-                                kr.ishs.raibit.ishsMinecraftRpg.player.ExpManager.addExp(ally, 5);
-                                break;
-                            }
-                        }
-                    }
+        // 처치 시 확률로 스탯 포인트 부여
+        if (Math.random() < GameplayConfig.killStatPointChance) {
+            pd.addStatPoints(GameplayConfig.killStatPoints);
+            actionBar(p, Messages.get("reward.kill-stat-point", "points", GameplayConfig.killStatPoints));
+        }
+
+        // 동아리 협동 확인: 같은 동아리원이 근처에 있으면 둘 다 도전과제, 동료는 경험치
+        if (pd.hasClub() && event.getEntity() instanceof Monster) {
+            double r = GameplayConfig.coopRadius;
+            for (Entity e : p.getNearbyEntities(r, r, r)) {
+                if (!(e instanceof Player)) continue;
+                Player ally = (Player) e;
+                PlayerData pdAlly = PlayerManager.getInstance().getPlayerData(ally);
+                if (pdAlly != null && pdAlly.hasClub() && pdAlly.getClub().equals(pd.getClub())) {
+                    CustomAchievement.grant(p, GameplayConfig.coopAchievement);
+                    CustomAchievement.grant(ally, GameplayConfig.coopAchievement);
+                    // 협동 시 파트너도 EXP 획득
+                    if (GameplayConfig.coopExp > 0) ExpManager.addExp(ally, GameplayConfig.coopExp);
+                    break;
                 }
             }
         }
     }
 
+    /** 사망/PvP 보상: gameplay.yml 의 rewards.death, rewards.pvp-win */
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
-        kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(victim, "first_death", "잠시 쉬어가도 좋아", "너무 무리하지 마세요!");
-        
+        CustomAchievement.grant(victim, GameplayConfig.deathAchievement);
+
         Player killer = victim.getKiller();
         if (killer != null) {
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pdK = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(killer);
-            kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData pdV = kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager.getInstance().getPlayerData(victim);
+            PlayerData pdK = PlayerManager.getInstance().getPlayerData(killer);
+            PlayerData pdV = PlayerManager.getInstance().getPlayerData(victim);
             if (pdK != null && pdV != null && pdK.hasClub() && pdV.hasClub() && !pdK.getClub().equals(pdV.getClub())) {
-                boolean granted = kr.ishs.raibit.ishsMinecraftRpg.CustomAchievement.grant(killer, "pvp_win", "동아리의 자랑", "타 동아리원과의 전투에서 승리했습니다!");
+                boolean granted = CustomAchievement.grant(killer, GameplayConfig.pvpWinAchievement);
                 if (granted) {
-                    pdK.addStatPoints(5); // 큰 보상
-                    killer.sendMessage(org.bukkit.ChatColor.AQUA + "전투 승리 보상으로 스탯 포인트 5를 획득했습니다!");
+                    pdK.addStatPoints(GameplayConfig.pvpWinStatPoints); // 큰 보상
+                    Messages.send(killer, "reward.pvp-win", "points", GameplayConfig.pvpWinStatPoints);
                 }
             }
         }
     }
 
-
     @EventHandler
     public void onFoodChange(FoodLevelChangeEvent event) {
+        if (GameplayConfig.hungerLoss) return;
         if (event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
             if (event.getFoodLevel() < player.getFoodLevel()) {
                 event.setCancelled(true);
             }
         }
+    }
+
+    /** 화면 아래쪽에 잠깐 보이는 안내 */
+    private void actionBar(Player p, String text) {
+        p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(text));
     }
 }

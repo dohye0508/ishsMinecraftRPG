@@ -1,10 +1,14 @@
 package kr.ishs.raibit.ishsMinecraftRpg.listener;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.gui.PluginGui;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatGUI;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatManager;
-import org.bukkit.Material;
+import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +16,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class StatListener implements Listener {
 
@@ -29,6 +34,29 @@ public class StatListener implements Listener {
         // 플레이어 데이터가 로드된 후 스탯 적용
         statManager.applyStats(player);
         statManager.updateActionBar(player);
+    }
+
+    /**
+     * 리스폰하면 HP/MP 를 가득 채운다. (커스텀 HP 는 죽어도 0 으로 남아 있어서, 채워 주지 않으면
+     * 리스폰 직후 아주 작은 피해에도 계속 죽는다)
+     */
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        PlayerData data = playerManager.getPlayerData(player.getUniqueId());
+        if (data == null) return;
+
+        statManager.applyStats(player); // 최대 HP/MP 다시 계산
+        data.setCurrentHp(data.getMaxHp());
+        data.setCurrentMp(data.getMaxMp());
+
+        // 바닐라가 리스폰 때 체력을 채운 다음에 체력바와 액션바를 맞춘다
+        Bukkit.getScheduler().runTaskLater(IshsMinecraftRpg.getPlugin(IshsMinecraftRpg.class), () -> {
+            if (player.isOnline()) {
+                statManager.updateHealthBar(player);
+                statManager.updateActionBar(player);
+            }
+        }, 1L);
     }
 
     @EventHandler
@@ -74,43 +102,29 @@ public class StatListener implements Listener {
         }
     }
 
+    /** /stat GUI 클릭: 클릭한 칸의 스탯을 올린다. (스탯 위치와 올라가는 양은 gameplay.yml) */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals("스탯 정보")) return;
+        if (!PluginGui.is(event, PluginGui.Type.STATS)) return;
         event.setCancelled(true);
+
+        // GUI 위쪽 칸을 클릭한 경우만 처리 (내 인벤토리 클릭은 무시)
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
 
         Player player = (Player) event.getWhoClicked();
         PlayerData data = playerManager.getPlayerData(player.getUniqueId());
-        if (data == null || event.getCurrentItem() == null) return;
+        if (data == null) return;
 
-        Material type = event.getCurrentItem().getType();
-        int amount = event.isShiftClick() ? 10 : 1;
+        GameplayConfig.StatDef stat = GameplayConfig.statBySlot(event.getRawSlot());
+        if (stat == null) return;
 
+        int amount = event.isShiftClick() ? GameplayConfig.shiftClickAmount : GameplayConfig.clickAmount;
         if (data.getStatPoints() < amount) {
-            player.sendMessage("§c스탯 포인트가 부족합니다.");
+            Messages.send(player, "stat.not-enough-points");
             return;
         }
 
-        switch (type) {
-            case REDSTONE:
-                data.setStr(data.getStr() + amount);
-                break;
-            case FEATHER:
-                data.setDex(data.getDex() + amount);
-                break;
-            case BOOK:
-                data.setIntel(data.getIntel() + amount);
-                break;
-            case APPLE:
-                data.setHpStat(data.getHpStat() + amount);
-                break;
-            case NETHER_STAR:
-                data.setWis(data.getWis() + amount);
-                break;
-            default:
-                return;
-        }
-
+        data.addStat(stat.id, amount);
         data.setStatPoints(data.getStatPoints() - amount);
         statManager.applyStats(player); // 스탯 재적용
         StatGUI.open(player); // GUI 갱신

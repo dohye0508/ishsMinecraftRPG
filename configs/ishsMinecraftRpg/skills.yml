@@ -1,0 +1,80 @@
+# ============================================================
+#  스킬 목록 (기획팀이 직접 수정하는 파일)
+# ============================================================
+#  - 값을 고친 뒤 게임에서 OP가  /설정리로드  를 입력하면 적용됩니다.
+#  - 스킬은 "특정 재료 + 특정 이름"의 아이템을 들고 우클릭하면 발동합니다.
+#    (그런 이름의 아이템은 /아이템지급 이나 BetonQuest 보상으로 지급할 수 있습니다)
+#  - 스킬을 쓰려면 마나(mana)가 필요하고, 쓴 뒤에는 쿨타임(cooldown)이 지나야 다시 쓸 수 있습니다.
+#    쿨타임은 스킬을 마지막으로 쓴 시점부터 계산하며, 어떤 스킬이든 마지막으로 쓴 시점이 기준입니다.
+#
+#  [스킬 종류 type] 종류는 코드에 연결되어 있고, 아래 값(수치)을 바꿔서 조정합니다.
+#    FIREBALL     화염구를 발사
+#    EARTHQUAKE   주변을 여러 번 타격하며 위로 띄움
+#                   radius 범위(블록), pulses 타격 횟수, interval-ticks 타격 간격(20틱 = 1초),
+#                   damage 피해량 = base + (힘 스탯 x per-str), launch-height 띄우는 세기
+#    HOLY_BOMB    주변에 한 번 폭발 피해
+#                   radius 범위(블록), damage 피해량 = base + (지능 스탯 x per-intel),
+#                   particle 파티클 이름, particle-count 개수, particle-spread 퍼짐
+#    HEAL         체력 회복 + 재생 효과
+#                   heal 회복량 = base + (지능 스탯 x per-intel),
+#                   regeneration 재생 효과 seconds 지속시간(초), level 단계
+#  공통: sound 효과음 이름(대문자), sound-volume 크기
+#  - 같은 종류의 스킬을 여러 개 만들 수 있습니다. (새 종류는 코드 추가가 필요합니다)
+# ============================================================
+
+skills:
+  fireball:
+    trigger:
+      material: BLAZE_ROD
+      name: "파이어볼"
+    cooldown: 5
+    mana: 20
+    type: FIREBALL
+
+  earthquake:
+    trigger:
+      material: DIAMOND_SWORD
+      name: "대지 가르기"
+    cooldown: 10
+    mana: 30
+    type: EARTHQUAKE
+    radius: 5
+    pulses: 5
+    interval-ticks: 10
+    damage:
+      base: 10
+      per-str: 3.5
+    launch-height: 1
+    sound: ENTITY_GENERIC_EXPLODE
+    sound-volume: 1.0
+
+  holybomb:
+    trigger:
+      material: ENCHANTED_BOOK
+      name: "신성 폭발"
+    cooldown: 15
+    mana: 40
+    type: HOLY_BOMB
+    radius: 7
+    damage:
+      base: 15
+      per-intel: 3
+    particle: CRIT
+    particle-count: 50
+    particle-spread: 3
+    sound: ENTITY_GENERIC_EXPLODE
+    sound-volume: 2.0
+
+  heal:
+    trigger:
+      material: GOLDEN_APPLE
+      name: "치유의 빛"
+    cooldown: 8
+    mana: 25
+    type: HEAL
+    heal:
+      base: 10
+      per-intel: 3
+    regeneration:
+      seconds: 5
+      level: 2

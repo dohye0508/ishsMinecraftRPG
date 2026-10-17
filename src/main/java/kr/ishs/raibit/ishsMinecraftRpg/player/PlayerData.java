@@ -1,6 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
-import kr.ishs.raibit.ishsMinecraftRpg.stat.GameConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.util.HashSet;
@@ -35,20 +35,19 @@ public class PlayerData {
         this.uuid = uuid;
         this.level = 1;
         this.experience = 0.0;
-        this.statPoints = GameConfig.startStatPoints;
+        this.statPoints = GameplayConfig.startingPoints;
 
-        this.str = GameConfig.startStr;
-        this.intel = GameConfig.startIntel;
-        this.hpStat = GameConfig.startHp;
-        this.dex = GameConfig.startDex;
-        this.wis = GameConfig.startWis;
+        this.str = GameplayConfig.stat("str").starting;
+        this.intel = GameplayConfig.stat("intel").starting;
+        this.hpStat = GameplayConfig.stat("hp").starting;
+        this.dex = GameplayConfig.stat("dex").starting;
+        this.wis = GameplayConfig.stat("wis").starting;
 
-        // StatManager.applyStats()와 동일한 공식으로 최초 HP/MP를 채워서 시작한다.
-        // (예전 바닐라 스케일 기본값 20/100을 그대로 두면, 새 캐릭터의 실제 체력이
-        //  새로 늘어난 최대체력 대비 극히 일부만 채워진 채로 시작해 한두 대에 죽는 버그가 있었음)
-        this.maxHp = 100 + (this.hpStat * 15);
+        // StatManager.applyStats()와 같은 공식(GameplayConfig)으로 최초 HP/MP를 채워서 시작한다.
+        // (새 캐릭터의 실제 체력이 최대체력 대비 극히 일부만 채워진 채로 시작해 한두 대에 죽는 것을 막는다)
+        this.maxHp = GameplayConfig.maxHp(this.hpStat);
         this.currentHp = this.maxHp;
-        this.maxMp = 50 + (this.intel * 10);
+        this.maxMp = GameplayConfig.maxMp(this.intel);
         this.currentMp = this.maxMp;
 
         this.club = null;
@@ -90,29 +89,42 @@ public class PlayerData {
     public void setMaxMp(double maxMp) { this.maxMp = maxMp; }
     public void setClub(String club) { this.club = club; }
 
-    /**
-     * 레벨업 처리. 스탯 포인트를 지급합니다.
-     */
-    public void levelUp() {
-        this.level++;
-        // Total Pt = 5 + Math.floor(L / 2)
-        // 레벨업 시 지급되는 포인트는 자율분배 포인트만 statPoints에 추가합니다.
-        // 공통/직업 스탯은 레벨업 시점에 바로 적용되도록 StatManager에서 처리합니다.
-        int newPoints = (int) (5 + Math.floor(this.level / 2.0));
-        int autoAssignedPoints = (int) Math.ceil(newPoints * 0.2) * 5; // 공통 올스탯 (+1 * 5)
-        int jobPoints = (int) Math.floor(newPoints * 0.3); // 직업 주력 스탯
-        int freePoints = newPoints - autoAssignedPoints - jobPoints; // 자율 포인트
-        
-        this.addStatPoints(freePoints);
+    /** 스탯 ID(str, dex, intel, hp, wis)로 현재 스탯 값을 읽습니다. */
+    public int getStat(String statId) {
+        switch (statId) {
+            case "str": return str;
+            case "dex": return dex;
+            case "intel": return intel;
+            case "hp": return hpStat;
+            case "wis": return wis;
+            default: return 0;
+        }
+    }
+
+    /** 스탯 ID(str, dex, intel, hp, wis)의 스탯을 amount 만큼 올립니다. */
+    public void addStat(String statId, int amount) {
+        switch (statId) {
+            case "str": str += amount; break;
+            case "dex": dex += amount; break;
+            case "intel": intel += amount; break;
+            case "hp": hpStat += amount; break;
+            case "wis": wis += amount; break;
+            default: break;
+        }
     }
 
     /**
-     * 레벨업에 필요한 경험치 공식
-     * Required_EXP(L) = Math.floor(100 * Math.pow(L, 2.5))
+     * 레벨업 처리. 레벨을 올리고 스탯 포인트를 지급합니다.
+     * 지급량 계산식은 gameplay.yml 의 leveling.level-up-points 를 따릅니다.
      */
+    public void levelUp() {
+        this.level++;
+        this.addStatPoints(GameplayConfig.levelUpFreePoints(this.level));
+    }
+
+    /** 다음 레벨에 필요한 경험치. 공식은 gameplay.yml 의 leveling.required-exp 를 따릅니다. */
     public double getRequiredExp() {
-        if (level >= 100) return Double.MAX_VALUE; // Max Level
-        return Math.floor(100 * Math.pow(level, 2.5));
+        return GameplayConfig.requiredExp(level);
     }
 
     public boolean hasAchievement(String trackId) {
@@ -153,11 +165,11 @@ public class PlayerData {
         this.level = config.getInt("level", 1);
         this.experience = config.getDouble("experience", 0.0);
         this.statPoints = config.getInt("statPoints", 0);
-        this.str = config.getInt("stats.str", 1);
-        this.intel = config.getInt("stats.intel", 1);
-        this.hpStat = config.getInt("stats.hpStat", 1);
-        this.dex = config.getInt("stats.dex", 1);
-        this.wis = config.getInt("stats.wis", 1);
+        this.str = config.getInt("stats.str", GameplayConfig.stat("str").starting);
+        this.intel = config.getInt("stats.intel", GameplayConfig.stat("intel").starting);
+        this.hpStat = config.getInt("stats.hpStat", GameplayConfig.stat("hp").starting);
+        this.dex = config.getInt("stats.dex", GameplayConfig.stat("dex").starting);
+        this.wis = config.getInt("stats.wis", GameplayConfig.stat("wis").starting);
         // HP/MP는 StatManager에서 스탯 기반으로 재계산하므로 저장된 값은 참고용으로만 로드
         this.maxHp = config.getDouble("hp.max", 0);
         this.currentHp = config.getDouble("hp.current", 0);

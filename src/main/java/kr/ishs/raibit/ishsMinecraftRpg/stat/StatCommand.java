@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.stat;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,7 +13,7 @@ public class StatCommand implements CommandExecutor {
             Player player = (Player) sender;
             StatGUI.open(player);
         } else {
-            sender.sendMessage("플레이어만 사용 가능한 명령어입니다.");
+            Messages.send(sender, "common.players-only");
         }
         return true;
     }

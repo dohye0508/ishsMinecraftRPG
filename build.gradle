@@ -15,12 +15,56 @@ repositories {
     maven {
         url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
     }
+    maven {
+        name = "citizens-repo"
+        url = 'https://maven.citizensnpcs.co/repo'
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.17.2")
     compileOnly 'me.clip:placeholderapi:2.11.6'
+    // NPC 는 Citizens 로 만든다 (서버에 설치된 플러그인 사용). 전이 의존성은 필요 없다.
+    compileOnly("net.citizensnpcs:citizens-main:2.0.43-SNAPSHOT") {
+        transitive = false
+    }
+
+    // 단위 테스트: 설정 파일(YAML)과 계산식이 의도대로인지 서버 없이 검증한다
+    testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+// 기본 테스트(./gradlew test): 설정 파일의 연결/형식 검증. 기획팀이 수치를 바꿔도 실패하지 않는다.
+test {
+    useJUnitPlatform {
+        excludeTags 'parity'
+    }
+    // 테스트는 프로젝트 폴더를 기준으로 configs/ 의 파일을 읽는다
+    workingDir = projectDir
+    testLogging {
+        events "passed", "failed", "skipped"
+        exceptionFormat "full"
+    }
+}
+
+// 개발용 테스트(./gradlew parityTest): 설정 기본값이 설정 파일로 옮기기 전 코드의 값/계산식과 같은지 검증한다.
+// 기획 의도로 수치를 바꾸면 실패하는 것이 정상이므로 build 에는 포함하지 않는다.
+tasks.register('parityTest', Test) {
+    group = 'verification'
+    description = '설정 기본값이 이전 하드코딩 값과 같은지 확인한다 (개발용)'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'parity'
+    }
+    workingDir = projectDir
+    testLogging {
+        events "passed", "failed", "skipped"
+        exceptionFormat "full"
+    }
 }
 
 jar {

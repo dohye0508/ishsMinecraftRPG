@@ -20,3 +20,6 @@ riroschoolauth.py
 
 # 이 PC의 서버 경로 (사람마다 다름)
 configs/server-path.txt
+
+# 서버가 npcs.yml 로부터 자동 생성하는 BetonQuest NPC 연결 파일
+configs/BetonQuest/QuestPackages/default/npcs_generated.yml

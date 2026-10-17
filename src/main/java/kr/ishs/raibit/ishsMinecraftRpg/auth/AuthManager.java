@@ -2,6 +2,9 @@ package kr.ishs.raibit.ishsMinecraftRpg.auth;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
 import kr.ishs.raibit.ishsMinecraftRpg.MapConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -10,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 플레이어 인증 상태 및 데이터를 전역적으로 관리합니다.
+ * 인증 사용 여부, 대기소 위치, 실패 허용 횟수, 게임모드, 테스트 계정은 config.yml(MapConfig), 문구는 messages.yml 에서 온다.
  */
 public class AuthManager {
 
@@ -39,13 +43,14 @@ public class AuthManager {
     /** UUID → 인증 전 기존 위치 (로그아웃 위치 보존용) */
     private final Map<UUID, org.bukkit.Location> preAuthLocations = new ConcurrentHashMap<>();
 
-    private static final int MAX_FAIL = 5;
-
-    // 인증 사용 여부, 인증 대기소, 최초 스폰 좌표는 config.yml에서 읽는다. (MapConfig 참고)
-
     public AuthManager(IshsMinecraftRpg plugin) {
         this.plugin = plugin;
         this.riroAuth = new RiroSchoolAuth(plugin.getLogger());
+    }
+
+    /** § 색상 코드가 들어 있는 문구를 채팅/퇴장 화면용 Component 로 바꿉니다. */
+    public static Component legacy(String text) {
+        return LegacyComponentSerializer.legacySection().deserialize(text);
     }
 
     /** 플레이어가 서버에 접속했을 때 초기화 */
@@ -70,23 +75,11 @@ public class AuthManager {
             preAuthLocations.put(uuid, currentLoc);
         }
 
-        // 로그인 전 대기소로 이동 및 모험 모드 변경
+        // 로그인 전 대기소로 이동 및 게임모드 변경
         player.teleport(MapConfig.authLocation(player.getWorld()));
-        player.setGameMode(org.bukkit.GameMode.ADVENTURE);
+        player.setGameMode(MapConfig.authGameModeWaiting);
 
-        sendAuthPrompt(player);
-    }
-
-    /** 인증 진입 안내 메시지 */
-    private void sendAuthPrompt(Player player) {
-        player.sendMessage("§8§l--------------------------------------------------");
-        player.sendMessage("§b§l인천과학고 마인크래프트 서버에 오신 것을 환영합니다!");
-        player.sendMessage("");
-        player.sendMessage("§f이 서버는 §e리로스쿨 계정§f으로만 접속할 수 있습니다.");
-        player.sendMessage("§f인증을 완료해야 게임을 즐길 수 있습니다.");
-        player.sendMessage("");
-        player.sendMessage("§a▶ 리로스쿨 §f아이디§a를 채팅으로 입력해 주세요:");
-        player.sendMessage("§8§l--------------------------------------------------");
+        Messages.send(player, "auth.prompt");
     }
 
     /** 플레이어 채팅 입력 처리 */
@@ -97,10 +90,10 @@ public class AuthManager {
         if (step == null || step == AuthStep.AUTHENTICATED) return false; // 인증 완료된 경우 일반 채팅 허용
 
         // 인증 실패 횟수 초과
-        if (failCount.getOrDefault(uuid, 0) >= MAX_FAIL) {
-            player.sendMessage("§c인증 시도 횟수를 초과했습니다. 서버에서 퇴장됩니다.");
+        if (failCount.getOrDefault(uuid, 0) >= MapConfig.authMaxFail) {
+            Messages.send(player, "auth.too-many-fails");
             plugin.getServer().getScheduler().runTask(plugin,
-                    () -> player.kick(net.kyori.adventure.text.Component.text("§c리로스쿨 인증 실패 (시도 횟수 초과)")));
+                    () -> player.kick(legacy(Messages.get("auth.kick-too-many"))));
             return true;
         }
 
@@ -108,21 +101,25 @@ public class AuthManager {
             case WAITING_ID -> {
                 pendingUserId.put(uuid, message.trim());
                 authSteps.put(uuid, AuthStep.WAITING_PASSWORD);
-                player.sendMessage("§a▶ 비밀번호를 입력해 주세요: §7(채팅창은 다른 플레이어에게 보이지 않습니다)");
+                Messages.send(player, "auth.ask-password");
             }
             case WAITING_PASSWORD -> {
                 String userId   = pendingUserId.get(uuid);
                 String password = message.trim();
                 pendingUserId.remove(uuid);
 
-                player.sendMessage("§e리로스쿨 서버에 접속 중... 잠시 기다려 주세요.");
+                Messages.send(player, "auth.connecting");
 
                 // 비동기로 HTTP 요청 (메인 스레드 블로킹 방지)
                 plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
                     PlayerAuthData data;
-                    if ("1".equals(userId) && "1".equals(password)) {
-                        // 계정이 없는 사람(테스트용)을 위한 1/1 하이패스 계정
-                        data = new PlayerAuthData(player.getName(), "게스트(테스트)", "0000", "0", true);
+                    if (MapConfig.testAccountEnabled
+                            && MapConfig.testAccountId.equals(userId)
+                            && MapConfig.testAccountPassword.equals(password)) {
+                        // 계정이 없는 사람(테스트용)을 위한 임시 계정. config.yml 의 auth.test-account 로 켜고 끈다.
+                        plugin.getLogger().warning("[Auth] 테스트 계정으로 인증되었습니다: " + player.getName());
+                        data = new PlayerAuthData(player.getName(), MapConfig.testAccountName,
+                                MapConfig.testAccountStudentId, MapConfig.testAccountGeneration, true);
                     } else {
                         data = riroAuth.login(player.getName(), userId, password);
                     }
@@ -147,7 +144,7 @@ public class AuthManager {
                 authSteps.put(uuid, AuthStep.WAITING_ID);
                 pendingUserId.put(uuid, message.trim());
                 authSteps.put(uuid, AuthStep.WAITING_PASSWORD);
-                player.sendMessage("§a▶ 비밀번호를 입력해 주세요:");
+                Messages.send(player, "auth.ask-password-retry");
             }
             default -> {} // AUTHENTICATED는 위에서 이미 처리됨
         }
@@ -156,29 +153,20 @@ public class AuthManager {
     }
 
     private void onAuthSuccess(Player player, PlayerAuthData data) {
-        player.sendMessage("§8§l--------------------------------------------------");
-        player.sendMessage("§a§l✔ 인증 성공!");
-        player.sendMessage("");
-        if (data.isStudent()) {
-            player.sendMessage("§f이름: §e" + data.getRealName());
-            player.sendMessage("§f학번: §e" + data.getStudentId() + "  §f기수: §e" + data.getGeneration() + "기");
-        } else {
-            player.sendMessage("§f이름: §e" + data.getRealName() + " §7(교사)");
-        }
-        player.sendMessage("");
-        player.sendMessage("§b즐거운 모험 되세요! ⚔");
-        player.sendMessage("§8§l--------------------------------------------------");
+        Messages.send(player, "auth.success-header");
+        Messages.send(player, data.isStudent() ? "auth.success-student" : "auth.success-teacher",
+                "name", data.getRealName(), "id", data.getStudentId(), "generation", data.getGeneration());
+        Messages.send(player, "auth.success-footer");
 
         // 모든 플레이어에게 입장 메시지
-        String joinMsg = "§8[§a+§8] §f" + player.getName() +
-                (data.isStudent() ? " §7(" + data.getRealName() + " / " + data.getStudentId() + ")" : " §7(" + data.getRealName() + " 선생님)") +
-                " §f님이 접속했습니다.";
-        plugin.getServer().broadcast(net.kyori.adventure.text.Component.text(joinMsg));
+        String joinMsg = Messages.get(data.isStudent() ? "auth.join-student" : "auth.join-teacher",
+                "player", player.getName(), "name", data.getRealName(), "id", data.getStudentId());
+        plugin.getServer().broadcast(legacy(joinMsg));
 
         // 위치 복구 또는 최초 인증 스폰 이동
         org.bukkit.Location orig = preAuthLocations.remove(player.getUniqueId());
         boolean firstTime = !player.hasPlayedBefore();
-        
+
         if (firstTime || orig == null) {
             // 최초 접속이거나, 이전 데이터 없이 대기실에서 로그아웃 한 경우 config.yml의 최초 스폰으로
             player.teleport(MapConfig.firstSpawnLocation(player.getWorld()));
@@ -187,8 +175,8 @@ public class AuthManager {
             player.teleport(orig);
         }
 
-        // 로그인 성공 시 서바이벌 모드로 변경
-        player.setGameMode(org.bukkit.GameMode.SURVIVAL);
+        // 로그인 성공 시 게임모드 변경 (config.yml 의 auth.gamemode.after)
+        player.setGameMode(MapConfig.authGameModeAfter);
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             if (player.isOnline()) {
@@ -201,20 +189,16 @@ public class AuthManager {
     }
 
     private void onAuthFailed(Player player, int failCount) {
-        int remaining = MAX_FAIL - failCount;
-        player.sendMessage("§8§l--------------------------------------------------");
-        player.sendMessage("§c§l✘ 인증 실패!");
-        player.sendMessage("§f아이디 또는 비밀번호가 올바르지 않습니다.");
+        int remaining = MapConfig.authMaxFail - failCount;
+        Messages.send(player, "auth.failed-header");
         if (remaining > 0) {
-            player.sendMessage("§e남은 시도 횟수: §f" + remaining + "번");
-            player.sendMessage("");
-            player.sendMessage("§a▶ 다시 리로스쿨 §f아이디§a를 입력해 주세요:");
+            Messages.send(player, "auth.failed-retry", "remaining", remaining);
         } else {
-            player.sendMessage("§c더 이상 시도할 수 없습니다. 서버에서 퇴장됩니다.");
+            Messages.send(player, "auth.failed-final");
             plugin.getServer().getScheduler().runTaskLater(plugin,
-                    () -> player.kick(net.kyori.adventure.text.Component.text("§c리로스쿨 인증 실패")), 60L);
+                    () -> player.kick(legacy(Messages.get("auth.kick-failed"))), 60L);
         }
-        player.sendMessage("§8§l--------------------------------------------------");
+        Messages.send(player, "auth.failed-footer");
     }
 
     /** 플레이어가 서버를 떠날 때 정리 */

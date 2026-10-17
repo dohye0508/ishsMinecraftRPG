@@ -1,37 +1,54 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.gui.PluginGui;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * 동아리 선택 GUI. 동아리 목록(이름, 아이콘, 위치, 보너스)은 clubs.yml, 문구는 messages.yml 에서 온다.
+ */
 public class ClubGUI {
 
     public static void openClubGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, "동아리(직업) 선택");
+        Inventory inv = PluginGui.create(PluginGui.Type.CLUB, ClubConfig.guiSize, Messages.get("club.gui-title"));
 
-        inv.setItem(10, createItem(Material.BOOK, ChatColor.AQUA + "LOGIC (수학)", ChatColor.GRAY + "지능 +15, 체력 +5"));
-        inv.setItem(11, createItem(Material.ANVIL, ChatColor.RED + "WIN (물리)", ChatColor.GRAY + "근력 +10, 민첩 +10"));
-        inv.setItem(12, createItem(Material.TNT, ChatColor.YELLOW + "TNT (화학)", ChatColor.GRAY + "근력 +10, 지능 +10"));
-        inv.setItem(13, createItem(Material.WHEAT, ChatColor.GREEN + "LOTTOL (생명과학)", ChatColor.GRAY + "체력 +15, 민첩 +5"));
-        inv.setItem(14, createItem(Material.ENDER_PEARL, ChatColor.DARK_PURPLE + "QUASAR (천문학)", ChatColor.GRAY + "지능 +10, 민첩 +10"));
-        inv.setItem(15, createItem(Material.REDSTONE, ChatColor.GOLD + "RAIBIT (정보)", ChatColor.GRAY + "민첩 +15, 지능 +5"));
-        inv.setItem(16, createItem(Material.IRON_BLOCK, ChatColor.DARK_GRAY + "PLUTONIUM (공학)", ChatColor.GRAY + "근력 +10, 체력 +10"));
+        for (ClubConfig.Club club : ClubConfig.all()) {
+            inv.setItem(club.slot, createItem(club.material, club.displayName(), bonusText(club)));
+        }
 
         player.openInventory(inv);
     }
 
+    /** 동아리 가입 보너스를 "지능 +15, 체력 +5" 같은 한 줄 설명으로 만듭니다. */
+    static String bonusText(ClubConfig.Club club) {
+        List<String> parts = new ArrayList<>();
+        for (Map.Entry<String, Integer> e : club.bonus.entrySet()) {
+            GameplayConfig.StatDef stat = GameplayConfig.stat(e.getKey());
+            String label = stat != null ? stat.label : e.getKey();
+            parts.add(Messages.get("club.bonus-entry", "stat", label, "amount", e.getValue()));
+        }
+        return Messages.get("club.bonus-lore", "bonuses", String.join(Messages.get("club.bonus-separator"), parts));
+    }
+
+    @SuppressWarnings("deprecation")
     private static ItemStack createItem(Material material, String name, String... lores) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(name);
-            meta.setLore(Arrays.asList(lores));
+            List<String> lore = new ArrayList<>();
+            for (String line : lores) lore.add(line);
+            meta.setLore(lore);
             item.setItemMeta(meta);
         }
         return item;

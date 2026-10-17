@@ -1,7 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
 import kr.ishs.raibit.ishsMinecraftRpg.RpgListener;
-import org.bukkit.ChatColor;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,25 +16,25 @@ public class EntryGateCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.isOp()) {
-            sender.sendMessage(ChatColor.RED + "권한이 없습니다.");
+            Messages.send(sender, "common.no-permission");
             return true;
         }
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.YELLOW + "현재 입장 상태: "
-                    + (rpgListener.isEntryOpen() ? ChatColor.GREEN + "허용" : ChatColor.RED + "차단 (관리자만 입장 가능)"));
-            sender.sendMessage(ChatColor.GRAY + "사용법: /입장허용 [열기|닫기]");
+            Messages.send(sender, "entry.status",
+                    "state", rpgListener.isEntryOpen() ? Messages.get("entry.state-open") : Messages.get("entry.state-closed"));
+            Messages.send(sender, "entry.usage");
             return true;
         }
 
-        if (args[0].equalsIgnoreCase("열기")) {
+        if (args[0].equalsIgnoreCase(Messages.get("entry.keyword-open"))) {
             rpgListener.setEntryOpen(true);
-            sender.sendMessage(ChatColor.GREEN + "[시스템] 이제부터 모든 플레이어의 입장이 허용됩니다.");
-        } else if (args[0].equalsIgnoreCase("닫기")) {
+            Messages.send(sender, "entry.opened");
+        } else if (args[0].equalsIgnoreCase(Messages.get("entry.keyword-close"))) {
             rpgListener.setEntryOpen(false);
-            sender.sendMessage(ChatColor.RED + "[시스템] 관리자(OP) 외 모든 플레이어의 입장이 차단됩니다. (이미 접속중인 인원은 유지)");
+            Messages.send(sender, "entry.closed");
         } else {
-            sender.sendMessage(ChatColor.RED + "사용법: /입장허용 [열기|닫기]");
+            Messages.send(sender, "entry.usage-error");
         }
         return true;
     }

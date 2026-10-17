@@ -23,6 +23,20 @@ public final class MapConfig {
     /** 인증 중 이동 가능 범위: 대기소 중심에서 상하좌우로 이만큼 (한 변 길이의 절반) */
     public static double authLockHalf = 7.5;
 
+    /** 인증에 연속으로 실패할 수 있는 횟수. 넘으면 서버에서 내보낸다 */
+    public static int authMaxFail = 5;
+    /** 인증 대기 중, 인증 성공 후의 게임모드 */
+    public static org.bukkit.GameMode authGameModeWaiting = org.bukkit.GameMode.ADVENTURE;
+    public static org.bukkit.GameMode authGameModeAfter = org.bukkit.GameMode.SURVIVAL;
+
+    // ---- 테스트 계정 (리로스쿨 확인 없이 통과하는 임시 계정, 운영 서버에서는 꺼 둔다) ----
+    public static boolean testAccountEnabled = false;
+    public static String testAccountId = "";
+    public static String testAccountPassword = "";
+    public static String testAccountName = "";
+    public static String testAccountStudentId = "";
+    public static String testAccountGeneration = "";
+
     // ---- 최초 스폰 ----
     public static double spawnX = 305.5;
     public static double spawnY = -61.0;
@@ -43,6 +57,19 @@ public final class MapConfig {
         authZ = c.getInt("auth.room.z", 363) + 0.5;
         authLockHalf = Math.max(1.0, c.getDouble("auth.lock-size", 15.0) / 2.0);
 
+        authMaxFail = Math.max(1, c.getInt("auth.max-fail", 5));
+        authGameModeWaiting = gameMode(c.getString("auth.gamemode.waiting"), org.bukkit.GameMode.ADVENTURE);
+        authGameModeAfter = gameMode(c.getString("auth.gamemode.after"), org.bukkit.GameMode.SURVIVAL);
+
+        // 아이디나 비밀번호가 비어 있으면 켜져 있어도 쓰지 않는다 (빈 값으로 통과되는 일을 막기 위해)
+        testAccountId = c.getString("auth.test-account.id", "");
+        testAccountPassword = c.getString("auth.test-account.password", "");
+        testAccountEnabled = c.getBoolean("auth.test-account.enabled", false)
+                && !testAccountId.isEmpty() && !testAccountPassword.isEmpty();
+        testAccountName = c.getString("auth.test-account.display-name", "");
+        testAccountStudentId = c.getString("auth.test-account.student-id", "");
+        testAccountGeneration = c.getString("auth.test-account.generation", "");
+
         spawnX = c.getInt("spawn.first.x", 305) + 0.5;
         spawnY = c.getDouble("spawn.first.y", -61.0);
         spawnZ = c.getInt("spawn.first.z", 156) + 0.5;
@@ -57,6 +84,16 @@ public final class MapConfig {
         borderMaxX = Math.max(x1, x2) + 1.0;
         borderMinZ = Math.min(z1, z2);
         borderMaxZ = Math.max(z1, z2) + 1.0;
+    }
+
+    /** 게임모드 이름(SURVIVAL, ADVENTURE, CREATIVE, SPECTATOR)을 읽고, 잘못되면 기본값을 쓴다 */
+    private static org.bukkit.GameMode gameMode(String name, org.bukkit.GameMode fallback) {
+        if (name == null || name.isBlank()) return fallback;
+        try {
+            return org.bukkit.GameMode.valueOf(name.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return fallback;
+        }
     }
 
     /** 리로스쿨 인증 대기소 위치 */
