@@ -3,6 +3,7 @@ version: 1.0-SNAPSHOT
 main: kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg
 api-version: '1.21'
 load: STARTUP
+softdepend: [Citizens, BetonQuest]
 
 commands:
   도움말:
@@ -41,6 +42,10 @@ commands:
   입장허용:
     description: 서버가 켜져 있어도 관리자 외 플레이어의 입장을 허용/차단합니다 (관리자 전용)
     usage: /입장허용 [열기|닫기]
+  엔피씨:
+    description: NPC 를 추가하거나 목록을 봅니다 (관리자 전용)
+    usage: /엔피씨 [추가|목록]
+    aliases: [rpgnpc]
   설정리로드:
     description: config.yml(스폰/인증/맵 경계/퀘스트 표시 이름)을 다시 불러옵니다 (관리자 전용)
     usage: /설정리로드

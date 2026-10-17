@@ -137,6 +137,27 @@ reload:
   spawn: "&7 - 최초 스폰: {x}, {y}, {z}"
   content: "&7 - 아이템 {items}종, 도전과제 {achievements}개, 동아리 {clubs}개 불러옴"
   betonquest: "&7BetonQuest(대화/퀘스트) 수정은 /bq reload 로 따로 적용하세요."
+  npc: "&7 - NPC {count}명 반영 (npcs.yml)"
+  npc-missing: "&c - NPC 를 반영하지 못했습니다. Citizens 플러그인을 확인하세요."
+
+
+# ---- NPC (/엔피씨, 관리자 전용) ----
+npc:
+  usage:
+    - "&e/엔피씨 추가 [키] [이름]&7 - 지금 서 있는 곳에 NPC 추가 (키는 영어 소문자, 예: library_teacher)"
+    - "&e/엔피씨 이동 [키]&7 - NPC 를 지금 서 있는 곳(바라보는 방향 포함)으로 옮김"
+    - "&e/엔피씨 삭제 [키]&7 - NPC 삭제"
+    - "&e/엔피씨 목록&7 - npcs.yml 의 NPC 목록"
+    - "&7이름, 스킨 수정은 npcs.yml 을 고친 뒤 /설정리로드"
+  list-header: "&6[NPC] 총 {count}명"
+  list-line: "&7 - &e{key}&7 ({name}&7) {x}, {y}, {z} / 대화: {conversation}"
+  bad-key: "&c'{key}' 는 쓸 수 없는 키입니다. 영어 소문자, 숫자, 밑줄만 쓸 수 있습니다."
+  already-exists: "&c이미 있는 NPC 키입니다: {key}"
+  write-failed: "&cnpcs.yml 에 쓰지 못했습니다: {error}"
+  unknown-key: "&c'{key}' 라는 NPC 가 npcs.yml 에 없습니다. (/엔피씨 목록)"
+  moved: "&a[NPC] {key} 를 지금 위치로 옮겼습니다."
+  removed: "&a[NPC] {key} 를 삭제했습니다."
+  added: "&a[NPC] {key} ({name}&a) 를 추가했습니다. 대화는 conversations/{key}.yml 에 만든 뒤 /bq reload"
 
 
 # ---- 사이드바 (화면 오른쪽 정보창) ----

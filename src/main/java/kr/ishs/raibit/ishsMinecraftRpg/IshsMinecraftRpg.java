@@ -8,6 +8,9 @@ import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderListener;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.StatListener;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcCommand;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcManager;
 import kr.ishs.raibit.ishsMinecraftRpg.player.*;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItems;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItemListener;
@@ -35,6 +38,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
     private StatManager statManager;
     private SkillManager skillManager;
     private RpgListener rpgListener;
+    private NpcManager npcManager;
 
     @Override
     public void onEnable() {
@@ -90,6 +94,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("퀘스트").setExecutor(new QuestCommand());
         getCommand("아이템지급").setExecutor(new CustomItemCommand());
         getCommand("입장허용").setExecutor(new EntryGateCommand(rpgListener));
+        getCommand("엔피씨").setExecutor(new NpcCommand(this));
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));
 
         // PlaceholderAPI가 설치되어 있다면 연동
@@ -104,6 +109,10 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         for (World world : Bukkit.getWorlds()) {
             applyWorldSettings(world);
         }
+
+        // NPC 는 Citizens 가 저장된 NPC 를 모두 불러온 뒤(서버 시작 직후)에 npcs.yml 대로 맞춘다
+        npcManager = new NpcManager(this);
+        getServer().getScheduler().runTask(this, this::reloadNpcs);
 
         getLogger().info("ISHSMinecraftRpg 활성화 완료 (동아리 " + ClubConfig.all().size()
                 + "개, 아이템 " + CustomItems.getIds().size() + "종, 도전과제 " + AchievementConfig.all().size()
@@ -144,6 +153,12 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         MapConfig.load(getConfig());
         QuestCommand.loadQuestNames(getConfig());
         reloadContent();
+    }
+
+    /** npcs.yml 을 다시 읽어 게임 안 NPC 를 그 내용대로 만들고, 옮기고, 지웁니다. @return 반영된 NPC 수 (Citizens 가 없으면 -1) */
+    public int reloadNpcs() {
+        NpcConfig.load(loadYaml("npcs.yml"), getLogger());
+        return npcManager.sync();
     }
 
     /** config.yml 을 제외한 설정 파일들을 다시 읽어 반영합니다. */

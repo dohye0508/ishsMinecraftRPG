@@ -50,6 +50,9 @@ public class ReloadCommand implements CommandExecutor {
                 "x", (int) Math.floor(MapConfig.spawnX), "y", (int) Math.floor(MapConfig.spawnY), "z", (int) Math.floor(MapConfig.spawnZ));
         Messages.send(sender, "reload.content",
                 "items", CustomItems.getIds().size(), "achievements", AchievementConfig.all().size(), "clubs", ClubConfig.all().size());
+        int npcs = plugin.reloadNpcs();
+        if (npcs >= 0) Messages.send(sender, "reload.npc", "count", npcs);
+        else Messages.send(sender, "reload.npc-missing");
         Messages.send(sender, "reload.betonquest");
         return true;
     }

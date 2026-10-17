@@ -15,12 +15,20 @@ repositories {
     maven {
         url = 'https://repo.extendedclip.com/content/repositories/placeholderapi/'
     }
+    maven {
+        name = "citizens-repo"
+        url = 'https://maven.citizensnpcs.co/repo'
+    }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     implementation("org.jsoup:jsoup:1.17.2")
     compileOnly 'me.clip:placeholderapi:2.11.6'
+    // NPC 는 Citizens 로 만든다 (서버에 설치된 플러그인 사용). 전이 의존성은 필요 없다.
+    compileOnly("net.citizensnpcs:citizens-main:2.0.43-SNAPSHOT") {
+        transitive = false
+    }
 
     // 단위 테스트: 설정 파일(YAML)과 계산식이 의도대로인지 서버 없이 검증한다
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")

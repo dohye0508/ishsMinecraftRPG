@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg;
 
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcConfig;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -64,6 +65,16 @@ class ConfigIntegrityTest {
         put("reload.border-range", "min-x", "max-x", "min-z", "max-z");
         put("reload.spawn", "x", "y", "z");
         put("reload.content", "items", "achievements", "clubs");
+        put("reload.npc", "count");
+        put("npc.list-header", "count");
+        put("npc.list-line", "key", "name", "x", "y", "z", "conversation");
+        put("npc.bad-key", "key");
+        put("npc.already-exists", "key");
+        put("npc.unknown-key", "key");
+        put("npc.moved", "key");
+        put("npc.removed", "key");
+        put("npc.write-failed", "error");
+        put("npc.added", "key", "name");
         put("scoreboard.lines", "level", "player", "exp", "exp-required", "str", "dex", "int", "hp", "wis",
                 "club", "cooldown", "mp", "max-mp", "club-ranking");
         put("scoreboard.cooldown", "seconds");
@@ -393,23 +404,41 @@ class ConfigIntegrityTest {
                 assertTrue(events.contains(ref.trim()), "event " + id + " 가 묶는 '" + ref + "' 가 events 에 없습니다");
             }
         }
+    }
 
-        // NPC 연결: npcs 와 npc_conversations 의 키가 같고, 대화 파일이 있고 그 안에 같은 이름의 대화가 있어야 한다
-        Set<String> npcs = main.getConfigurationSection("npcs").getKeys(false);
-        ConfigurationSection npcConversations = main.getConfigurationSection("npc_conversations");
-        assertEquals(npcs, npcConversations.getKeys(false), "npcs 와 npc_conversations 의 NPC 키가 다릅니다");
-        Set<String> citizensIds = new HashSet<>();
-        for (String npc : npcs) {
-            String binding = main.getConfigurationSection("npcs").getString(npc);
-            assertTrue(binding.matches("citizens \\d+"), npc + " 연결 형식: " + binding);
-            assertTrue(citizensIds.add(binding), "같은 Citizens ID 를 두 NPC 에 연결했습니다: " + binding);
+    @Test
+    void npcsYmlIsValidAndLinkedToConversations() {
+        YamlConfiguration cfg = TestSupport.plugin("npcs.yml");
+        java.util.Map<String, NpcConfig.Npc> npcs = NpcConfig.parse(cfg, null);
 
-            String conversation = npcConversations.getString(npc);
-            java.io.File file = TestSupport.betonQuest("conversations/" + conversation + ".yml");
-            assertTrue(file.exists(), npc + " 의 대화 파일이 없습니다: " + file);
+        // 형식이 틀려 건너뛰어지는 항목이 없어야 한다
+        ConfigurationSection raw = cfg.getConfigurationSection("npcs");
+        Set<String> declared = raw == null ? Set.of() : raw.getKeys(false);
+        assertEquals(declared, npcs.keySet(), "npcs.yml 에서 형식이 잘못되어 무시되는 NPC 가 있습니다");
+
+        for (NpcConfig.Npc npc : npcs.values()) {
+            assertTrue(!npc.name.isBlank(), npc.key + " name");
+            java.io.File file = TestSupport.betonQuest("conversations/" + npc.conversation + ".yml");
+            assertTrue(file.exists(), npc.key + " 의 대화 파일이 없습니다: " + file);
             YamlConfiguration conv = TestSupport.yaml(file.toPath());
-            assertTrue(conv.isConfigurationSection("conversations." + conversation),
-                    file.getName() + " 안에 '" + conversation + "' 대화가 정의되어 있지 않습니다");
+            assertTrue(conv.isConfigurationSection("conversations." + npc.conversation),
+                    file.getName() + " 안에 '" + npc.conversation + "' 대화가 정의되어 있지 않습니다");
+        }
+
+        // main.yml 에는 NPC 연결이 없어야 한다 (NPC 연결은 npcs.yml 에서 자동 생성됨)
+        YamlConfiguration main = TestSupport.yaml(TestSupport.betonQuest("main.yml").toPath());
+        assertTrue(!main.isSet("npcs") && !main.isSet("npc_conversations"),
+                "main.yml 에 npcs/npc_conversations 가 있습니다. NPC 는 npcs.yml 에서만 관리합니다");
+    }
+
+    @Test
+    void conversationFilesAreAllUsedByAnNpc() {
+        java.util.Set<String> used = new HashSet<>();
+        for (NpcConfig.Npc npc : NpcConfig.parse(TestSupport.plugin("npcs.yml"), null).values()) used.add(npc.conversation);
+        java.io.File[] files = TestSupport.betonQuest("conversations").listFiles((d, n) -> n.endsWith(".yml"));
+        for (java.io.File f : files) {
+            String name = f.getName().replace(".yml", "");
+            assertTrue(used.contains(name), "대화 파일 " + f.getName() + " 을 쓰는 NPC 가 npcs.yml 에 없습니다");
         }
     }
 }

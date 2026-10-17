@@ -82,7 +82,7 @@ cd ishsMinecraftRpg
 ## 📚 문서
 
 - [docs/기획팀_가이드.md](docs/기획팀_가이드.md) — 기획팀용: 설정 파일별 수정 방법, 아이템·NPC·퀘스트 추가
-- [docs/NPC_LIST.md](docs/NPC_LIST.md) — NPC ID 매핑 가이드
+- [docs/NPC_LIST.md](docs/NPC_LIST.md) — 현재 NPC 목록 (관리는 `npcs.yml`)
 - [docs/ITEM_LIST.md](docs/ITEM_LIST.md) — 커스텀 아이템 목록 및 지급 방법
 - [docs/TUTORIAL_GUIDE.md](docs/TUTORIAL_GUIDE.md) — 신입생 튜토리얼 가이드
 - [docs/WORLDVIEW.md](docs/WORLDVIEW.md) — 세계관/설정
