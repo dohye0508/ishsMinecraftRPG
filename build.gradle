@@ -55,6 +55,16 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+// 기획팀이 수정하는 설정 파일(config/items/achievements/help.yml)은 configs/ishsMinecraftRpg 에서 관리한다.
+// 빌드할 때 이 폴더의 파일이 jar 안의 기본 파일(서버 첫 실행 시 생성되는 파일)로 들어간다.
+sourceSets {
+    main {
+        resources {
+            srcDir 'configs/ishsMinecraftRpg'
+        }
+    }
+}
+
 processResources {
     def props = [version: version]
     inputs.properties props

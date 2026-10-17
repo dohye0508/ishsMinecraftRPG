@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
+import kr.ishs.raibit.ishsMinecraftRpg.AchievementConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -15,10 +16,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * /도전과제 GUI. 도전과제 목록과 문구는 achievements.yml 에서 읽는다.
+ */
 public class AchievementCommand implements CommandExecutor {
 
-    // 3x3 중앙 정렬 그리드 (9칸)
-    private static final int[] SLOTS = {12, 13, 14, 21, 22, 23, 30, 31, 32};
+    // 9개 이하일 때: 3x3 중앙 정렬 그리드 (9칸)
+    private static final int[] SLOTS_SMALL = {12, 13, 14, 21, 22, 23, 30, 31, 32};
+    // 10개 이상일 때: 가로 7칸 x 세로 4줄 그리드 (최대 28개)
+    private static final int[] SLOTS_LARGE = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34,
+            37, 38, 39, 40, 41, 42, 43};
 
     @SuppressWarnings("deprecation")
     @Override
@@ -28,30 +38,26 @@ public class AchievementCommand implements CommandExecutor {
         PlayerData pd = PlayerManager.getInstance().getPlayerData(p);
 
         List<AchEntry> entries = new ArrayList<>();
-        entries.add(new AchEntry(Material.TOTEM_OF_UNDYING, "인천과학고 입학", "동아리를 선택하여 무사히 입학 완료!",
-                pd != null && pd.hasAchievement("join_club")));
-        entries.add(new AchEntry(Material.DIAMOND, "진짜 보물 찾기", "깊은 곳에서 다이아몬드를 발견했습니다.",
-                pd != null && pd.hasAchievement("diamond")));
-        entries.add(new AchEntry(Material.OAK_LOG, "나무꾼의 길", "처음으로 원목을 채집했습니다.",
-                pd != null && pd.hasAchievement("lumberjack")));
-        entries.add(new AchEntry(Material.ZOMBIE_HEAD, "학업 스트레스 해소", "처음으로 몬스터를 사냥했습니다!",
-                pd != null && pd.hasAchievement("first_kill")));
-        entries.add(new AchEntry(Material.EXPERIENCE_BOTTLE, "자기계발의 시작", "나만의 길을 걷기 위해 스탯을 올렸습니다.",
-                pd != null && pd.hasAchievement("stat_up")));
-        entries.add(new AchEntry(Material.SKELETON_SKULL, "잠시 쉬어가도 좋아", "가끔은 쓰러져도 괜찮습니다.",
-                pd != null && pd.hasAchievement("first_death")));
-        entries.add(new AchEntry(Material.IRON_SWORD, "동아리의 자랑", "타 동아리원과의 전투에서 승리했습니다!",
-                pd != null && pd.hasAchievement("pvp_win")));
-        entries.add(new AchEntry(Material.GOLDEN_APPLE, "우리는 하나", "동아리원과 함께 몬스터를 처치했습니다!",
-                pd != null && pd.hasAchievement("club_coop")));
+        for (AchievementConfig.Def def : AchievementConfig.all()) {
+            if (!def.showInGui) continue;
 
-        int npcCount = 0;
-        if (pd != null) {
-            for (String a : pd.getAchievements()) {
-                if (a.startsWith("first_npc_")) npcCount++;
+            boolean unlocked;
+            String desc = def.description;
+            if (def.countPrefix != null) {
+                // 접두어로 시작하는 달성 기록의 개수를 센다 (예: first_npc_*)
+                int count = 0;
+                if (pd != null) {
+                    for (String a : pd.getAchievements()) {
+                        if (a.startsWith(def.countPrefix)) count++;
+                    }
+                }
+                desc = desc.replace("{count}", String.valueOf(count));
+                unlocked = count > 0;
+            } else {
+                unlocked = pd != null && pd.hasAchievement(def.id);
             }
+            entries.add(new AchEntry(def.material, def.title, desc, unlocked));
         }
-        entries.add(new AchEntry(Material.EMERALD, "NPC와의 조우", "서버의 특별한 NPC들과 " + npcCount + "명 만남!", npcCount > 0));
 
         int unlockedCount = 0;
         for (AchEntry e : entries) if (e.unlocked) unlockedCount++;
@@ -67,8 +73,9 @@ public class AchievementCommand implements CommandExecutor {
 
         inv.setItem(4, createProgressItem(unlockedCount, entries.size()));
 
-        for (int i = 0; i < entries.size() && i < SLOTS.length; i++) {
-            inv.setItem(SLOTS[i], createItem(entries.get(i)));
+        int[] slots = entries.size() <= SLOTS_SMALL.length ? SLOTS_SMALL : SLOTS_LARGE;
+        for (int i = 0; i < entries.size() && i < slots.length; i++) {
+            inv.setItem(slots[i], createItem(entries.get(i)));
         }
 
         p.openInventory(inv);
@@ -99,14 +106,14 @@ public class AchievementCommand implements CommandExecutor {
                 meta.setLore(Arrays.asList(
                         ChatColor.WHITE + e.desc,
                         "",
-                        ChatColor.GREEN + "✔ 달성 완료"
+                        ChatColor.GREEN + AchievementConfig.unlockedLabel
                 ));
             } else {
                 meta.setDisplayName(ChatColor.DARK_GRAY + "" + ChatColor.BOLD + "??? " + ChatColor.DARK_GRAY + e.title);
                 meta.setLore(Arrays.asList(
-                        ChatColor.GRAY + "아직 밝혀지지 않은 업적입니다.",
+                        ChatColor.GRAY + AchievementConfig.lockedDescription,
                         "",
-                        ChatColor.RED + "✘ 미달성"
+                        ChatColor.RED + AchievementConfig.lockedLabel
                 ));
             }
             item.setItemMeta(meta);
@@ -119,7 +126,7 @@ public class AchievementCommand implements CommandExecutor {
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "달성 현황");
+            meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + AchievementConfig.progressTitle);
             int percent = total == 0 ? 0 : (int) ((unlocked * 100.0) / total);
             meta.setLore(Arrays.asList(
                     ChatColor.WHITE + "" + unlocked + " / " + total + " 개 달성",

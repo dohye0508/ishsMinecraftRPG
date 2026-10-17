@@ -1,6 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.auth;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import kr.ishs.raibit.ishsMinecraftRpg.MapConfig;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
@@ -24,9 +25,6 @@ public class AuthListener implements Listener {
 
     private final IshsMinecraftRpg plugin;
     private final AuthManager authManager;
-
-    /** 미인증 플레이어가 스폰될 위치 (이동 못 하도록 고정) */
-    private static final double LOCK_RADIUS = 3.0;
 
     public AuthListener(IshsMinecraftRpg plugin, AuthManager authManager) {
         this.plugin = plugin;
@@ -106,9 +104,9 @@ public class AuthListener implements Listener {
                 && from.getBlockY() == to.getBlockY()
                 && from.getBlockZ() == to.getBlockZ()) return;
 
-        // 대기실(-117, -50, 0) 기준으로 제한
-        Location authSpawn = new Location(player.getWorld(), -117.5, -50.0, 0.5);
-        if (authSpawn.distanceSquared(to) > LOCK_RADIUS * LOCK_RADIUS) {
+        // config.yml의 인증 대기소 중심, auth.lock-size 범위 안에서만 이동 가능
+        if (Math.abs(to.getX() - MapConfig.authX) > MapConfig.authLockHalf
+                || Math.abs(to.getZ() - MapConfig.authZ) > MapConfig.authLockHalf) {
             event.setTo(from); // 이동 취소
         }
     }

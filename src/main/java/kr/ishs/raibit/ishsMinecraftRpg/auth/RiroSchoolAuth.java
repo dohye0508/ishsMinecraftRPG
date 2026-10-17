@@ -69,23 +69,21 @@ public class RiroSchoolAuth {
             String jsonText = readBody(loginConn);
             loginConn.disconnect();
 
-            logger.info("[RiroAuth] \ub85c\uadf8\uc778 \uc751\ub2f5: " + jsonText);
-
+            // \ubcf4\uc548: \ub85c\uadf8\uc778 \uc751\ub2f5(\ud1a0\ud070, \uac1c\uc778\uc815\ubcf4 \ud3ec\ud568)\uc740 \ub85c\uadf8\uc5d0 \ucd9c\ub825\ud558\uc9c0 \uc54a\ub294\ub2e4.
             String code = extractJsonField(jsonText, "code");
-            logger.info("[RiroAuth] \ud30c\uc2f1\ub41c code: " + code);
 
             if ("902".equals(code)) {
-                logger.warning("[RiroAuth] \uc544\uc774\ub514/\ube44\ubc00\ubc88\ud638 \uc624\ub958 - userId: " + userId);
+                logger.warning("[RiroAuth] \uc544\uc774\ub514/\ube44\ubc00\ubc88\ud638 \uc624\ub958 - player: " + playerName);
                 return null;
             }
             if (!"000".equals(code)) {
-                logger.warning("[RiroAuth] \ub85c\uadf8\uc778 \uc2e4\ud328 (code=" + code + ") - userId: " + userId);
+                logger.warning("[RiroAuth] \ub85c\uadf8\uc778 \uc2e4\ud328 (code=" + code + ") - player: " + playerName);
                 return null;
             }
 
             String token = extractJsonField(jsonText, "token");
             if (token == null || token.isEmpty()) {
-                logger.warning("[RiroAuth] \ud1a0\ud070 \ubbf8\ubc1c\uae09 - userId: " + userId);
+                logger.warning("[RiroAuth] \ud1a0\ud070 \ubbf8\ubc1c\uae09 - player: " + playerName);
                 return null;
             }
             cookies.put("cookie_token", token);
@@ -99,11 +97,7 @@ public class RiroSchoolAuth {
 
             Document doc = Jsoup.parse(htmlBody, USER_URL);
 
-            // 디버그: td_title 전체 목록 출력
             Elements allTitles = doc.select(".td_title");
-            StringBuilder titleLog = new StringBuilder("[RiroAuth] td_title \ubaa9\ub85d: ");
-            for (Element t : allTitles) titleLog.append("[").append(t.text().trim()).append("]");
-            logger.info(titleLog.toString());
 
             // 4. 계정 유형 판별 (\ud1b5\ud569\uc544\uc774\ub514=통합아이디)
             String accountType = "normal";
@@ -137,9 +131,6 @@ public class RiroSchoolAuth {
         String name             = extractByTitle(doc, "\uc774\ub984", "\uc131\uba85");
         String studentNumberRaw = extractByTitle(doc, "\ud559\ubc88", "\ud559\ubc88/\uc0ac\ubc88");
 
-        logger.info("[RiroAuth] parseNormal \u2192 studentText=" + studentText
-                + ", name=" + name + ", studentNumberRaw=" + studentNumberRaw);
-
         if (name.isEmpty()) {
             logger.warning("[RiroAuth] parseNormal \uc2e4\ud328: \uc774\ub984 \ud30c\uc2f1 \uc548\ub428");
             return null;
@@ -171,9 +162,6 @@ public class RiroSchoolAuth {
 
         String name             = extractByTitle(doc, "\uc774\ub984", "\uc131\uba85");
         String studentNumberRaw = extractByTitle(doc, "\ud559\ubc88", "\ud559\ubc88/\uc0ac\ubc88");
-
-        logger.info("[RiroAuth] parseIntegrated \u2192 studentText=" + studentText
-                + ", name=" + name + ", studentNumberRaw=" + studentNumberRaw);
 
         if (name.isEmpty()) {
             logger.warning("[RiroAuth] parseIntegrated \uc2e4\ud328: \uc774\ub984 \ud30c\uc2f1 \uc548\ub428");

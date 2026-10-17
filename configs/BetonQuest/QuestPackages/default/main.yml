@@ -58,7 +58,7 @@ events:
   dorm2_give: "command give %player% experience_bottle 16"
 
 items:
-  BREAD: BREAD
+  BREAD: "simple BREAD"
 
 objectives:
   logic_quest_obj: "mobkill ZOMBIE 3 events:logic_quest_reward"
