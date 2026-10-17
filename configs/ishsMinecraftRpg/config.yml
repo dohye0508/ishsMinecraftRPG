@@ -44,10 +44,11 @@ auth:
   #   - 이 저장소는 공개되어 있으므로, 실제로 쓰는 아이디/비밀번호는 Git 에 올리지 마세요.
   #     (아이디나 비밀번호가 비어 있으면 enabled 가 true 여도 동작하지 않습니다)
   #   - 이 계정으로 인증되면 서버 콘솔에 기록이 남습니다.
+  #   - 현재 값(1 / 1)은 코드에 박혀 있던 기존 테스트 계정을 그대로 유지한 것입니다. 운영 전에는 enabled 를 false 로 바꾸세요.
   test-account:
-    enabled: false
-    id: ""
-    password: ""
+    enabled: true
+    id: "1"
+    password: "1"
     display-name: "게스트(테스트)"    # 인증 정보에 표시되는 이름
     student-id: "0000"
     generation: "0"
