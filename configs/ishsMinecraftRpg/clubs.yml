@@ -1,0 +1,93 @@
+# ============================================================
+#  동아리(직업) 목록 (기획팀이 직접 수정하는 파일)
+# ============================================================
+#  - 동아리 선택 GUI, 가입 시 스탯 보너스, 사이드바 랭킹이 모두 이 목록 하나를 씁니다.
+#  - 값을 고친 뒤 게임에서 OP가  /설정리로드  를 입력하면 적용됩니다.
+#  - 적는 순서가 사이드바 랭킹의 기본 순서입니다.
+#
+#  항목 설명
+#    (키)      동아리 ID. 영어 대문자 권장 (플레이어 데이터와 BetonQuest 의 %ishsrpg_club% 에 이 값이 쓰입니다)
+#    name      GUI 에 보이는 이름
+#    color     색상 코드 (&b 하늘, &c 빨강, &e 노랑, &a 연두, &5 보라, &6 금색, &8 진회색 ...)
+#    icon      랭킹 등에 쓰는 아이콘 (이모지 가능)
+#    material  GUI 아이콘 (마인크래프트 영어 이름, 대문자)
+#    slot      GUI 칸 번호 (0부터. gui-size 보다 작아야 하고 다른 동아리와 겹치면 안 됨)
+#    bonus     가입할 때 올라가는 스탯. 스탯 ID: str(근력), dex(민첩), intel(지능), hp(체력), wis(정신력)
+#
+#  [주의] 동아리 ID를 바꾸거나 지우면, 그 동아리로 이미 가입한 플레이어의 소속이 인식되지 않습니다.
+#        새 동아리는 새 ID로 추가하세요. (동아리를 없앨 때는 플레이어 처리 방법을 먼저 정해야 합니다)
+#  - 가입 후 탈퇴해도 올라간 스탯은 회수되지 않습니다. (현재 기능 범위)
+# ============================================================
+
+gui-size: 27                 # 동아리 선택 GUI 칸 수 (9의 배수)
+
+clubs:
+  LOGIC:
+    name: "LOGIC (수학)"
+    color: "&b"
+    icon: "📘"
+    material: BOOK
+    slot: 10
+    bonus:
+      intel: 15
+      hp: 5
+
+  WIN:
+    name: "WIN (물리)"
+    color: "&c"
+    icon: "🔨"
+    material: ANVIL
+    slot: 11
+    bonus:
+      str: 10
+      dex: 10
+
+  TNT:
+    name: "TNT (화학)"
+    color: "&e"
+    icon: "🧨"
+    material: TNT
+    slot: 12
+    bonus:
+      str: 10
+      intel: 10
+
+  LOTTOL:
+    name: "LOTTOL (생명과학)"
+    color: "&a"
+    icon: "🌾"
+    material: WHEAT
+    slot: 13
+    bonus:
+      hp: 15
+      dex: 5
+
+  QUASAR:
+    name: "QUASAR (천문학)"
+    color: "&5"
+    icon: "🔮"
+    material: ENDER_PEARL
+    slot: 14
+    bonus:
+      intel: 10
+      dex: 10
+
+  RAIBIT:
+    name: "RAIBIT (정보)"
+    color: "&6"
+    icon: "💻"
+    material: REDSTONE
+    slot: 15
+    bonus:
+      dex: 15
+      intel: 5
+
+  PLUTONIUM:
+    name: "PLUTONIUM (공학)"
+    color: "&8"
+    icon: "⚙"
+    material: IRON_BLOCK
+    slot: 16
+    bonus:
+      str: 10
+      hp: 10

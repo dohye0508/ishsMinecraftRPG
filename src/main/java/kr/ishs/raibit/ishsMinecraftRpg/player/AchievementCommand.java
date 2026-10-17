@@ -1,8 +1,8 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
 import kr.ishs.raibit.ishsMinecraftRpg.AchievementConfig;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.gui.PluginGui;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,6 +21,9 @@ import java.util.List;
  */
 public class AchievementCommand implements CommandExecutor {
 
+    private static final int GUI_SIZE = 54;
+    private static final int PROGRESS_SLOT = 4;
+
     // 9개 이하일 때: 3x3 중앙 정렬 그리드 (9칸)
     private static final int[] SLOTS_SMALL = {12, 13, 14, 21, 22, 23, 30, 31, 32};
     // 10개 이상일 때: 가로 7칸 x 세로 4줄 그리드 (최대 28개)
@@ -30,10 +33,12 @@ public class AchievementCommand implements CommandExecutor {
             28, 29, 30, 31, 32, 33, 34,
             37, 38, 39, 40, 41, 42, 43};
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) return false;
+        if (!(sender instanceof Player)) {
+            Messages.send(sender, "common.players-only");
+            return true;
+        }
         Player p = (Player) sender;
         PlayerData pd = PlayerManager.getInstance().getPlayerData(p);
 
@@ -62,16 +67,13 @@ public class AchievementCommand implements CommandExecutor {
         int unlockedCount = 0;
         for (AchEntry e : entries) if (e.unlocked) unlockedCount++;
 
-        // RpgListener의 아이템 취득 방지 로직이 "[ 🏆 나의 도전과제 ]" 문자열을 그대로 찾으므로
-        // 이 부분은 색상 코드로 끊기지 않도록 유지한다.
-        // 인벤토리 제목 배경은 밝은 색이라 GOLD/YELLOW 계열은 대비가 낮아 잘 안 보이므로 BLACK 사용.
-        Inventory inv = Bukkit.createInventory(null, 54,
-                ChatColor.BLACK + "[ 🏆 나의 도전과제 ] " + ChatColor.DARK_GRAY + "(" + unlockedCount + "/" + entries.size() + ")");
+        Inventory inv = PluginGui.create(PluginGui.Type.ACHIEVEMENTS, GUI_SIZE,
+                Messages.apply(AchievementConfig.guiTitle, "unlocked", unlockedCount, "total", entries.size()));
 
         ItemStack filler = createFiller();
-        for (int i = 0; i < 54; i++) inv.setItem(i, filler);
+        for (int i = 0; i < GUI_SIZE; i++) inv.setItem(i, filler);
 
-        inv.setItem(4, createProgressItem(unlockedCount, entries.size()));
+        inv.setItem(PROGRESS_SLOT, createProgressItem(unlockedCount, entries.size()));
 
         int[] slots = entries.size() <= SLOTS_SMALL.length ? SLOTS_SMALL : SLOTS_LARGE;
         for (int i = 0; i < entries.size() && i < slots.length; i++) {
@@ -102,18 +104,18 @@ public class AchievementCommand implements CommandExecutor {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (e.unlocked) {
-                meta.setDisplayName(ChatColor.GREEN + "" + ChatColor.BOLD + e.title);
+                meta.setDisplayName(Messages.apply(AchievementConfig.unlockedName, "title", e.title));
                 meta.setLore(Arrays.asList(
-                        ChatColor.WHITE + e.desc,
+                        Messages.apply(AchievementConfig.unlockedDescription, "description", e.desc),
                         "",
-                        ChatColor.GREEN + AchievementConfig.unlockedLabel
+                        Messages.apply(AchievementConfig.unlockedLabel)
                 ));
             } else {
-                meta.setDisplayName(ChatColor.DARK_GRAY + "" + ChatColor.BOLD + "??? " + ChatColor.DARK_GRAY + e.title);
+                meta.setDisplayName(Messages.apply(AchievementConfig.lockedName, "title", e.title));
                 meta.setLore(Arrays.asList(
-                        ChatColor.GRAY + AchievementConfig.lockedDescription,
+                        Messages.apply(AchievementConfig.lockedDescription),
                         "",
-                        ChatColor.RED + AchievementConfig.lockedLabel
+                        Messages.apply(AchievementConfig.lockedLabel)
                 ));
             }
             item.setItemMeta(meta);
@@ -126,11 +128,11 @@ public class AchievementCommand implements CommandExecutor {
         ItemStack item = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + AchievementConfig.progressTitle);
+            meta.setDisplayName(Messages.apply(AchievementConfig.progressTitle));
             int percent = total == 0 ? 0 : (int) ((unlocked * 100.0) / total);
             meta.setLore(Arrays.asList(
-                    ChatColor.WHITE + "" + unlocked + " / " + total + " 개 달성",
-                    ChatColor.YELLOW + "" + percent + "% 완료"
+                    Messages.apply(AchievementConfig.progressCount, "unlocked", unlocked, "total", total),
+                    Messages.apply(AchievementConfig.progressPercent, "percent", percent)
             ));
             item.setItemMeta(meta);
         }

@@ -1,6 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg;
 
-import org.bukkit.ChatColor;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Constants;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -12,9 +13,9 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * 도전과제(업적) 정의. achievements.yml에서 읽는다. (기획팀이 코드 없이 수정 가능)
- * /도전과제 GUI와 달성 알림 문구가 모두 여기서 나온다.
- * 달성 조건은 도전과제 ID에 코드가 연결되어 있다.
+ * 도전과제(업적) 정의와 문구. achievements.yml 에서 읽는다. (기획팀이 코드 없이 수정 가능)
+ * /도전과제 GUI 와 달성 알림 문구가 모두 여기서 나온다.
+ * 어떤 일을 하면 어떤 도전과제를 주는지는 gameplay.yml 에서 도전과제 ID 로 연결한다.
  */
 public final class AchievementConfig {
 
@@ -45,20 +46,38 @@ public final class AchievementConfig {
 
     private static final Map<String, Def> DEFS = new LinkedHashMap<>();
 
-    // GUI 공통 문구 (achievements.yml 의 texts 항목, 없으면 아래 기본값)
-    public static String lockedDescription = "아직 밝혀지지 않은 업적입니다.";
-    public static String unlockedLabel = "✔ 달성 완료";
-    public static String lockedLabel = "✘ 미달성";
-    public static String progressTitle = "달성 현황";
+    // 문구 템플릿 (achievements.yml 의 texts). 사용하는 곳에서 Messages.apply 로 자리표시자를 채운다.
+    public static String guiTitle = "";
+    public static String progressTitle = "";
+    public static String progressCount = "";
+    public static String progressPercent = "";
+    public static String unlockedName = "";
+    public static String unlockedDescription = "";
+    public static String unlockedLabel = "";
+    public static String lockedName = "";
+    public static String lockedDescription = "";
+    public static String lockedLabel = "";
+    public static String popupTitle = "";
+    public static String popupSubtitle = "";
+    public static List<String> popupChat = new ArrayList<>();
 
-    /** achievements.yml 을 읽어 정의를 갱신합니다. */
+    /** achievements.yml 을 읽어 정의와 문구를 갱신합니다. */
     public static void load(FileConfiguration config, Logger logger) {
         DEFS.clear();
 
-        lockedDescription = color(config.getString("texts.locked-description", lockedDescription));
-        unlockedLabel = color(config.getString("texts.unlocked-label", unlockedLabel));
-        lockedLabel = color(config.getString("texts.locked-label", lockedLabel));
-        progressTitle = color(config.getString("texts.progress-title", progressTitle));
+        guiTitle = text(config, "gui-title", logger);
+        progressTitle = text(config, "progress-title", logger);
+        progressCount = text(config, "progress-count", logger);
+        progressPercent = text(config, "progress-percent", logger);
+        unlockedName = text(config, "unlocked-name", logger);
+        unlockedDescription = text(config, "unlocked-description", logger);
+        unlockedLabel = text(config, "unlocked-label", logger);
+        lockedName = text(config, "locked-name", logger);
+        lockedDescription = text(config, "locked-description", logger);
+        lockedLabel = text(config, "locked-label", logger);
+        popupTitle = text(config, "popup-title", logger);
+        popupSubtitle = text(config, "popup-subtitle", logger);
+        popupChat = new ArrayList<>(config.getStringList("texts.popup-chat"));
 
         ConfigurationSection section = config.getConfigurationSection("achievements");
         if (section == null) {
@@ -72,15 +91,15 @@ public final class AchievementConfig {
 
             String materialName = s.getString("material", "PAPER");
             Material material = Material.matchMaterial(materialName);
-            if (material == null || material.isAir()) {
+            if (material == null || Constants.isAir(material)) {
                 logger.warning("[achievements.yml] '" + id + "' 의 material '" + materialName
                         + "' 을(를) 찾을 수 없어 PAPER로 대체합니다.");
                 material = Material.PAPER;
             }
 
-            String title = color(s.getString("title", id));
-            String description = color(s.getString("description", ""));
-            String popup = s.contains("popup") ? color(s.getString("popup", description)) : description;
+            String title = Messages.color(s.getString("title", id));
+            String description = Messages.color(s.getString("description", ""));
+            String popup = s.contains("popup") ? Messages.color(s.getString("popup", description)) : description;
             DEFS.put(id, new Def(id, material, title, description, popup,
                     s.getBoolean("show-in-gui", true), s.getString("count-prefix")));
         }
@@ -96,8 +115,12 @@ public final class AchievementConfig {
         return DEFS.get(id);
     }
 
-    @SuppressWarnings("deprecation")
-    private static String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
+    private static String text(FileConfiguration config, String key, Logger logger) {
+        String path = "texts." + key;
+        if (!config.contains(path)) {
+            logger.warning("[achievements.yml] '" + path + "' 문구가 없습니다.");
+            return "";
+        }
+        return config.getString(path, "");
     }
 }

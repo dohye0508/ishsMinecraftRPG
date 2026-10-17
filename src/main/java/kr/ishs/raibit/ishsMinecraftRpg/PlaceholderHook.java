@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
@@ -47,7 +48,7 @@ public class PlaceholderHook extends PlaceholderExpansion {
 
         // %ishsrpg_club%
         if (params.equalsIgnoreCase("club")) {
-            return pd.hasClub() ? pd.getClub() : "미가입";
+            return pd.hasClub() ? pd.getClub() : Messages.get("placeholder.club-none");
         }
         
         // %ishsrpg_level%

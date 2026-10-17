@@ -5,10 +5,14 @@
 
 ```text
 configs/
-├── ishsMinecraftRpg/            ← 이 플러그인 설정
-│   ├── config.yml                 스폰, 인증, 맵 경계, /퀘스트 표시 이름, 시작 스탯
-│   ├── items.yml                  커스텀 아이템 이름·재료·설명
+├── ishsMinecraftRpg/            ← 이 플러그인 설정 (/설정리로드 로 적용)
+│   ├── config.yml                 맵 경계, 스폰, 리로스쿨 인증, /퀘스트 표시 이름
+│   ├── gameplay.yml               스탯 공식, 레벨, 보상, 게임 규칙, 월드 설정
+│   ├── clubs.yml                  동아리 (이름, 아이콘, 가입 보너스)
+│   ├── skills.yml                 스킬 (쿨타임, 마나, 피해량)
+│   ├── items.yml                  커스텀 아이템 (이름, 설명, 기능)
 │   ├── achievements.yml           도전과제 이름·설명·알림 문구
+│   ├── messages.yml               알림·안내·GUI·사이드바 문구
 │   └── help.yml                   /도움말 문구
 ├── BetonQuest/QuestPackages/default/
 │   ├── main.yml                   퀘스트 목표·보상, NPC 연결
@@ -48,8 +52,9 @@ configs/
 
 ## 처음 서버를 세팅할 때
 
-`config.yml`, `items.yml`, `achievements.yml`, `help.yml`은 플러그인 jar 안에 기본값이 들어 있어서, 서버를 처음 켜면 `plugins/ishsMinecraftRpg/`에 자동으로 만들어집니다.
+`ishsMinecraftRpg/` 안의 `.yml`은 플러그인 jar 안에 기본값이 들어 있어서, 서버를 처음 켜면 `plugins/ishsMinecraftRpg/`에 자동으로 만들어집니다.
 (빌드할 때 이 폴더의 `ishsMinecraftRpg/*.yml`이 jar의 기본 파일로 들어갑니다.)
+파일에서 항목이 빠져 있으면 jar 안의 기본값으로 채워집니다.
 BetonQuest와 MythicMobs 파일은 `배포.bat`으로 서버에 넣습니다.
 
 자세한 편집 방법(NPC, 퀘스트, 아이템 추가)은 [docs/기획팀_가이드.md](../docs/기획팀_가이드.md)를 보세요.

@@ -1,6 +1,10 @@
 package kr.ishs.raibit.ishsMinecraftRpg.task;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.player.ClubScoreManager;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import kr.ishs.raibit.ishsMinecraftRpg.player.SkillManager;
@@ -13,7 +17,20 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 1초마다 플레이어별 사이드바, 마나 재생, 발광 효과, Tab 목록을 갱신한다.
+ * 사이드바/Tab 문구와 줄 구성은 messages.yml, 마나 재생 공식은 gameplay.yml 에서 온다.
+ */
 public class RpgUpdateTask implements Runnable {
+
+    /** 사이드바 템플릿에서 {club-ranking} 한 줄을 동아리 랭킹 줄들로 바꾸기 위한 임시 표식 */
+    private static final String RANKING_MARKER = "\u0001club-ranking\u0001";
+
     private final IshsMinecraftRpg plugin;
     private final SkillManager skillManager;
 
@@ -32,59 +49,82 @@ public class RpgUpdateTask implements Runnable {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void updateScoreboard(Player p) {
         PlayerData pd = PlayerManager.getInstance().getPlayerData(p.getUniqueId());
         if (pd == null) return;
 
         Scoreboard board = Bukkit.getScoreboardManager().getNewScoreboard();
-        Objective obj = board.registerNewObjective("is-rpg", "dummy", ChatColor.GOLD + "ISHS RPG");
+        Objective obj = board.registerNewObjective("is-rpg", "dummy", Messages.get("scoreboard.title"));
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
-        // 클라이언트 사이드바는 화면에 보이는 줄 수가 제한적이라 15줄 이내로 맞춘다.
-        obj.getScore(ChatColor.WHITE + "Lv. " + pd.getLevel() + " " + p.getName()).setScore(15);
-        obj.getScore(ChatColor.WHITE + "EXP: " + String.format("%.1f", pd.getExperience()) + " / " + (long)pd.getRequiredExp()).setScore(14);
-        obj.getScore(ChatColor.WHITE + "🗡 STR: " + ChatColor.RED + pd.getStr() + ChatColor.WHITE + " 🏃 DEX: " + ChatColor.BLUE + pd.getDex()).setScore(13);
-        obj.getScore(ChatColor.WHITE + "🔮 INT: " + ChatColor.AQUA + pd.getIntel() + ChatColor.WHITE + " ❤ HP: " + ChatColor.GREEN + pd.getHpStat() + ChatColor.WHITE + " ✨ WIS: " + ChatColor.LIGHT_PURPLE + pd.getWis()).setScore(12);
-
-        String club = pd.hasClub() ? pd.getClub() : "없음";
-        obj.getScore(ChatColor.WHITE + "소속: " + ChatColor.YELLOW + club).setScore(11);
-
         int remainCd = skillManager.getRemainCooldown(p.getUniqueId());
-        String cdText = (remainCd > 0) ? ChatColor.YELLOW + " (쿨타임 " + remainCd + "초)" : "";
-        obj.getScore(ChatColor.WHITE + "스킬:" + cdText).setScore(10);
+        String cooldownText = remainCd > 0 ? Messages.get("scoreboard.cooldown", "seconds", remainCd) : "";
 
-        String manaText = ChatColor.AQUA + "💧 마나: " + (int)pd.getCurrentMp() + " / " + (int)pd.getMaxMp();
-        obj.getScore(manaText).setScore(9);
+        List<String> templateLines = Messages.list("scoreboard.lines",
+                "level", pd.getLevel(),
+                "player", p.getName(),
+                "exp", String.format("%.1f", pd.getExperience()),
+                "exp-required", (long) pd.getRequiredExp(),
+                "str", pd.getStr(),
+                "dex", pd.getDex(),
+                "int", pd.getIntel(),
+                "hp", pd.getHpStat(),
+                "wis", pd.getWis(),
+                "club", pd.hasClub() ? pd.getClub() : Messages.get("scoreboard.club-none"),
+                "cooldown", cooldownText,
+                "mp", (int) pd.getCurrentMp(),
+                "max-mp", (int) pd.getMaxMp(),
+                "club-ranking", RANKING_MARKER);
 
-        obj.getScore(ChatColor.GRAY + "--- [ 동아리 랭킹 ] ---").setScore(8);
+        // {club-ranking} 줄을 동아리 랭킹 줄들로 펼친다
+        List<String> lines = new ArrayList<>();
+        for (String line : templateLines) {
+            if (line.equals(RANKING_MARKER)) {
+                lines.addAll(rankingLines());
+            } else {
+                lines.add(line.replace(RANKING_MARKER, ""));
+            }
+        }
 
-        kr.ishs.raibit.ishsMinecraftRpg.player.ClubScoreManager scoreMgr = kr.ishs.raibit.ishsMinecraftRpg.player.ClubScoreManager.getInstance();
-        String[] clubs = {"LOGIC", "WIN", "TNT", "LOTTOL", "QUASAR", "RAIBIT", "PLUTONIUM"};
-        java.util.List<String> clubList = new java.util.ArrayList<>(java.util.Arrays.asList(clubs));
-        clubList.sort((c1, c2) -> Integer.compare(scoreMgr.getScore(c2), scoreMgr.getScore(c1)));
-
-        int line = 7;
-        for (int i = 0; i < clubList.size(); i++) {
-            String c = clubList.get(i);
-            int s = scoreMgr.getScore(c);
-            obj.getScore(ChatColor.WHITE + String.valueOf(i + 1) + "위. " + getClubPrefix(c) + ChatColor.WHITE + " " + s + "점").setScore(line);
-            line--;
+        // 사이드바는 같은 글자의 줄을 하나로 합치므로, 겹치면 보이지 않는 서식 코드를 덧붙여 구분한다
+        Set<String> used = new HashSet<>();
+        int score = lines.size();
+        for (String line : lines) {
+            String entry = line;
+            while (!used.add(entry)) entry += ChatColor.RESET;
+            obj.getScore(entry).setScore(score--);
         }
 
         p.setScoreboard(board);
+    }
+
+    /** 동아리 점수 순위 줄들. 점수가 같으면 clubs.yml 의 순서를 따른다. */
+    private List<String> rankingLines() {
+        ClubScoreManager scoreMgr = ClubScoreManager.getInstance();
+        List<ClubConfig.Club> clubs = ClubConfig.all();
+        clubs.sort((c1, c2) -> Integer.compare(scoreMgr.getScore(c2.id), scoreMgr.getScore(c1.id)));
+
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < clubs.size(); i++) {
+            ClubConfig.Club club = clubs.get(i);
+            out.add(Messages.get("scoreboard.ranking-line",
+                    "rank", i + 1, "club", club.prefix(), "score", scoreMgr.getScore(club.id)));
+        }
+        return out;
     }
 
     private void regenerateMana(Player p) {
         PlayerData pd = PlayerManager.getInstance().getPlayerData(p.getUniqueId());
         if (pd == null) return;
 
-        // 초당 (2 + 지능/5) 만큼 마나 재생
-        pd.setCurrentMp(pd.getCurrentMp() + (2 + pd.getIntel() / 5.0));
+        // 초당 마나 재생량: gameplay.yml 의 stats.mana-regen
+        pd.setCurrentMp(pd.getCurrentMp() + GameplayConfig.manaRegenPerSecond(pd.getIntel()));
     }
 
     private void applyPermanentEffects(Player p) {
-        // 리로스쿨 인증(로그인)이 끝나기 전에는 발광 효과를 켜지 않는다.
-        if (!plugin.getAuthManager().isAuthenticated(p)) {
+        // 리로스쿨 인증(로그인)이 끝나기 전에는, 또는 규칙에서 꺼져 있으면 발광 효과를 켜지 않는다.
+        if (!GameplayConfig.glowingPlayers || !plugin.getAuthManager().isAuthenticated(p)) {
             if (p.hasPotionEffect(PotionEffectType.GLOWING)) {
                 p.removePotionEffect(PotionEffectType.GLOWING);
             }
@@ -96,26 +136,11 @@ public class RpgUpdateTask implements Runnable {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void updateTabList(Player p) {
-        String header = ChatColor.GOLD + "" + ChatColor.BOLD + "⚔ ISHS RPG ⚔\n"
-                + ChatColor.GRAY + "현재 접속자: " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size() + "명\n";
-        String footer = "\n" + ChatColor.YELLOW + "[ Tab 안내 ]\n"
-                + ChatColor.WHITE + "/도움말" + ChatColor.GRAY + " 전체 명령어  " + ChatColor.WHITE + "/stat" + ChatColor.GRAY + " 스탯 분배\n"
-                + ChatColor.WHITE + "/퀘스트" + ChatColor.GRAY + " 진행 퀘스트  " + ChatColor.WHITE + "/도전과제" + ChatColor.GRAY + " 업적 확인\n"
-                + ChatColor.WHITE + "/lobby" + ChatColor.GRAY + " 로비 이동";
+        int online = Bukkit.getOnlinePlayers().size();
+        String header = String.join("\n", Messages.list("tab.header", "online", online));
+        String footer = String.join("\n", Messages.list("tab.footer", "online", online));
         p.setPlayerListHeaderFooter(header, footer);
-    }
-
-    private String getClubPrefix(String club) {
-        switch (club) {
-            case "LOGIC": return ChatColor.AQUA + "📘 LOGIC";
-            case "WIN": return ChatColor.RED + "🔨 WIN";
-            case "TNT": return ChatColor.YELLOW + "🧨 TNT";
-            case "LOTTOL": return ChatColor.GREEN + "🌾 LOTTOL";
-            case "QUASAR": return ChatColor.DARK_PURPLE + "🔮 QUASAR";
-            case "RAIBIT": return ChatColor.GOLD + "💻 RAIBIT";
-            case "PLUTONIUM": return ChatColor.DARK_GRAY + "⚙ PLUTONIUM";
-            default: return ChatColor.GRAY + "❔ " + club;
-        }
     }
 }

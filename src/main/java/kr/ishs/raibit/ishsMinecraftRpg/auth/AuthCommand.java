@@ -1,6 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.auth;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,6 +15,7 @@ import java.util.List;
  * /인증      - 인증 재시작 (이미 인증된 경우 정보 표시)
  * /인증정보  - 본인의 리로스쿨 정보 확인
  * /인증목록  - (OP 전용) 현재 접속자 인증 현황
+ * 문구는 messages.yml 의 auth 항목에서 온다.
  */
 public class AuthCommand implements CommandExecutor, TabCompleter {
 
@@ -28,7 +30,7 @@ public class AuthCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§c플레이어만 사용할 수 있는 명령어입니다.");
+            Messages.send(sender, "common.players-only");
             return true;
         }
 
@@ -38,7 +40,7 @@ public class AuthCommand implements CommandExecutor, TabCompleter {
             case "인증" -> handleAuthCmd(player, args);
             case "인증정보" -> handleInfoCmd(player);
             case "인증목록" -> handleListCmd(player);
-            default -> player.sendMessage("§c알 수 없는 명령어입니다.");
+            default -> Messages.send(player, "auth.unknown-command");
         }
 
         return true;
@@ -48,7 +50,7 @@ public class AuthCommand implements CommandExecutor, TabCompleter {
         if (authManager.isAuthenticated(player)) {
             PlayerAuthData data = authManager.getAuthData(player);
             if (data != null) {
-                player.sendMessage("§a이미 인증되어 있습니다.");
+                Messages.send(player, "auth.already");
                 printAuthInfo(player, data);
             }
         } else {
@@ -59,12 +61,12 @@ public class AuthCommand implements CommandExecutor, TabCompleter {
 
     private void handleInfoCmd(Player player) {
         if (!authManager.isAuthenticated(player)) {
-            player.sendMessage("§c아직 인증되지 않았습니다. §e/인증 §c을 먼저 진행해 주세요.");
+            Messages.send(player, "auth.not-authenticated");
             return;
         }
         PlayerAuthData data = authManager.getAuthData(player);
         if (data == null) {
-            player.sendMessage("§c인증 데이터를 찾을 수 없습니다.");
+            Messages.send(player, "auth.no-data");
             return;
         }
         printAuthInfo(player, data);
@@ -72,39 +74,38 @@ public class AuthCommand implements CommandExecutor, TabCompleter {
 
     private void handleListCmd(Player player) {
         if (!player.isOp()) {
-            player.sendMessage("§cOP 권한이 필요합니다.");
+            Messages.send(player, "auth.op-required");
             return;
         }
 
-        player.sendMessage("§8§l------ §e인증 현황 §8§l------");
+        Messages.send(player, "auth.list-header");
         int count = 0;
         for (Player p : plugin.getServer().getOnlinePlayers()) {
             if (authManager.isAuthenticated(p)) {
                 PlayerAuthData d = authManager.getAuthData(p);
-                String info = d != null
-                        ? (d.isStudent() ? d.getRealName() + " (" + d.getStudentId() + ")" : d.getRealName() + " 선생님")
-                        : "데이터 없음";
-                player.sendMessage("§a✔ §f" + p.getName() + " §7" + info);
+                String info;
+                if (d == null) {
+                    info = Messages.get("auth.list-info-none");
+                } else if (d.isStudent()) {
+                    info = Messages.get("auth.list-info-student", "name", d.getRealName(), "id", d.getStudentId());
+                } else {
+                    info = Messages.get("auth.list-info-teacher", "name", d.getRealName());
+                }
+                Messages.send(player, "auth.list-ok", "player", p.getName(), "info", info);
                 count++;
             } else {
-                player.sendMessage("§c✘ §f" + p.getName() + " §7(인증 미완료)");
+                Messages.send(player, "auth.list-fail", "player", p.getName());
             }
         }
-        player.sendMessage("§8§l총 " + count + "/" + plugin.getServer().getOnlinePlayers().size() + "명 인증 완료");
+        Messages.send(player, "auth.list-footer", "count", count, "total", plugin.getServer().getOnlinePlayers().size());
     }
 
     private void printAuthInfo(Player player, PlayerAuthData data) {
-        player.sendMessage("§8§l--------------------------------------------------");
-        player.sendMessage("§b§l나의 인증 정보");
-        player.sendMessage("§f마인크래프트: §e" + data.getPlayerName());
-        player.sendMessage("§f이름: §e" + data.getRealName());
-        if (data.isStudent()) {
-            player.sendMessage("§f학번: §e" + data.getStudentId());
-            player.sendMessage("§f기수: §e" + data.getGeneration() + "기");
-        } else {
-            player.sendMessage("§f역할: §e교사");
-        }
-        player.sendMessage("§8§l--------------------------------------------------");
+        Messages.send(player, "auth.info-header");
+        Messages.send(player, data.isStudent() ? "auth.info-student" : "auth.info-teacher",
+                "player", data.getPlayerName(), "name", data.getRealName(),
+                "id", data.getStudentId(), "generation", data.getGeneration());
+        Messages.send(player, "auth.info-footer");
     }
 
     @Override

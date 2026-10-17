@@ -2,6 +2,7 @@ package kr.ishs.raibit.ishsMinecraftRpg.auth;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
 import kr.ishs.raibit.ishsMinecraftRpg.MapConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
@@ -50,14 +51,9 @@ public class AuthListener implements Listener {
         PlayerAuthData data = authManager.getAuthData(player);
 
         if (data != null) {
-            event.quitMessage(
-                    net.kyori.adventure.text.Component.text(
-                    "§8[§c-§8] §f" + player.getName() +
-                    (data.isStudent()
-                            ? " §7(" + data.getRealName() + " / " + data.getStudentId() + ")"
-                            : " §7(" + data.getRealName() + " 선생님)") +
-                    " §f님이 퇴장했습니다.")
-            );
+            event.quitMessage(AuthManager.legacy(Messages.get(
+                    data.isStudent() ? "auth.quit-student" : "auth.quit-teacher",
+                    "player", player.getName(), "name", data.getRealName(), "id", data.getStudentId())));
         } else {
             event.quitMessage(null); // 미인증 퇴장은 조용히
         }

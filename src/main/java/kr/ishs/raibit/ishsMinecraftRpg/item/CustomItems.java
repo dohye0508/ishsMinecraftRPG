@@ -1,5 +1,6 @@
 package kr.ishs.raibit.ishsMinecraftRpg.item;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Constants;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -68,7 +69,7 @@ public class CustomItems {
 
             String materialName = section.getString("material", "");
             Material material = Material.matchMaterial(materialName);
-            if (material == null || material.isAir()) {
+            if (material == null || Constants.isAir(material)) {
                 if (logger != null) {
                     logger.warning("[items.yml] '" + id + "' 아이템의 material '" + materialName
                             + "' 을(를) 찾을 수 없어 건너뜁니다. (영어 대문자 재료 이름인지 확인하세요)");

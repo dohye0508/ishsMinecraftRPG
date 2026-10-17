@@ -1,7 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.player;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -26,7 +26,7 @@ public class QuestCommand implements CommandExecutor {
         for (String objectiveId : section.getKeys(false)) {
             String displayName = section.getString(objectiveId);
             if (displayName != null && !displayName.isBlank()) {
-                QUEST_NAMES.put(objectiveId, displayName);
+                QUEST_NAMES.put(objectiveId, Messages.color(displayName));
             }
         }
     }
@@ -34,28 +34,28 @@ public class QuestCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage("플레이어만 사용할 수 있습니다.");
-            return false;
+            Messages.send(sender, "common.players-only");
+            return true;
         }
         Player p = (Player) sender;
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") == null) {
-            p.sendMessage(ChatColor.RED + "퀘스트 정보를 불러올 수 없습니다. (PlaceholderAPI 미설치)");
+            Messages.send(p, "quest.placeholderapi-missing");
             return true;
         }
 
-        p.sendMessage(ChatColor.GOLD + "==== [ 📜 진행중인 퀘스트 ] ====");
+        Messages.send(p, "quest.header");
         boolean any = false;
         for (Map.Entry<String, String> entry : QUEST_NAMES.entrySet()) {
             Integer left = getObjectiveLeft(p, entry.getKey());
             if (left == null || left <= 0) continue;
             any = true;
-            p.sendMessage(ChatColor.WHITE + "• " + entry.getValue() + ChatColor.YELLOW + " (남음: " + left + ")");
+            Messages.send(p, "quest.entry", "name", entry.getValue(), "left", left);
         }
         if (!any) {
-            p.sendMessage(ChatColor.GRAY + "현재 진행 중인 퀘스트가 없습니다. NPC에게 말을 걸어보세요!");
+            Messages.send(p, "quest.none");
         }
-        p.sendMessage(ChatColor.GOLD + "===============================");
+        Messages.send(p, "quest.footer");
         return true;
     }
 

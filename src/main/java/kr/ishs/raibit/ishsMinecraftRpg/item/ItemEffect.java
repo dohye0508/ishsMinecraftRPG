@@ -1,6 +1,7 @@
 package kr.ishs.raibit.ishsMinecraftRpg.item;
 
-import org.bukkit.ChatColor;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Constants;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -222,22 +223,11 @@ public final class ItemEffect {
         }
     }
 
-    /**
-     * Sound / Particle / PotionEffectType 처럼 서버 버전에 따라 enum 이거나 인터페이스 상수인 타입을
-     * 이름(대문자)으로 찾는다. 없으면 null.
-     */
     private static <T> T constant(Class<T> type, String name) {
-        if (name == null || name.isBlank()) return null;
-        try {
-            Object value = type.getField(name.trim().toUpperCase(Locale.ROOT)).get(null);
-            return type.isInstance(value) ? type.cast(value) : null;
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            return null;
-        }
+        return Constants.find(type, name);
     }
 
-    @SuppressWarnings("deprecation")
     private static String color(String text) {
-        return ChatColor.translateAlternateColorCodes('&', text == null ? "" : text);
+        return Messages.color(text);
     }
 }

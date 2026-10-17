@@ -1,10 +1,12 @@
 package kr.ishs.raibit.ishsMinecraftRpg.listener;
 
+import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
+import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.gui.PluginGui;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatGUI;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatManager;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -74,43 +76,29 @@ public class StatListener implements Listener {
         }
     }
 
+    /** /stat GUI 클릭: 클릭한 칸의 스탯을 올린다. (스탯 위치와 올라가는 양은 gameplay.yml) */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals("스탯 정보")) return;
+        if (!PluginGui.is(event, PluginGui.Type.STATS)) return;
         event.setCancelled(true);
+
+        // GUI 위쪽 칸을 클릭한 경우만 처리 (내 인벤토리 클릭은 무시)
+        if (event.getClickedInventory() != event.getView().getTopInventory()) return;
 
         Player player = (Player) event.getWhoClicked();
         PlayerData data = playerManager.getPlayerData(player.getUniqueId());
-        if (data == null || event.getCurrentItem() == null) return;
+        if (data == null) return;
 
-        Material type = event.getCurrentItem().getType();
-        int amount = event.isShiftClick() ? 10 : 1;
+        GameplayConfig.StatDef stat = GameplayConfig.statBySlot(event.getRawSlot());
+        if (stat == null) return;
 
+        int amount = event.isShiftClick() ? GameplayConfig.shiftClickAmount : GameplayConfig.clickAmount;
         if (data.getStatPoints() < amount) {
-            player.sendMessage("§c스탯 포인트가 부족합니다.");
+            Messages.send(player, "stat.not-enough-points");
             return;
         }
 
-        switch (type) {
-            case REDSTONE:
-                data.setStr(data.getStr() + amount);
-                break;
-            case FEATHER:
-                data.setDex(data.getDex() + amount);
-                break;
-            case BOOK:
-                data.setIntel(data.getIntel() + amount);
-                break;
-            case APPLE:
-                data.setHpStat(data.getHpStat() + amount);
-                break;
-            case NETHER_STAR:
-                data.setWis(data.getWis() + amount);
-                break;
-            default:
-                return;
-        }
-
+        data.addStat(stat.id, amount);
         data.setStatPoints(data.getStatPoints() - amount);
         statManager.applyStats(player); // 스탯 재적용
         StatGUI.open(player); // GUI 갱신
