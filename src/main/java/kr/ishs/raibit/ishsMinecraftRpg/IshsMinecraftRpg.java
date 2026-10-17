@@ -11,6 +11,7 @@ import kr.ishs.raibit.ishsMinecraftRpg.listener.StatListener;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcManager;
+import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcStartupListener;
 import kr.ishs.raibit.ishsMinecraftRpg.player.*;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItems;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItemListener;
@@ -110,9 +111,11 @@ public final class IshsMinecraftRpg extends JavaPlugin {
             applyWorldSettings(world);
         }
 
-        // NPC 는 Citizens 가 저장된 NPC 를 모두 불러온 뒤(서버 시작 직후)에 npcs.yml 대로 맞춘다
+        // NPC 는 Citizens 가 저장된 NPC 를 모두 불러온 뒤(서버 시작이 끝난 뒤)에 npcs.yml 대로 맞춘다
         npcManager = new NpcManager(this);
-        getServer().getScheduler().runTask(this, this::reloadNpcs);
+        if (getServer().getPluginManager().getPlugin("Citizens") != null) {
+            getServer().getPluginManager().registerEvents(new NpcStartupListener(this), this);
+        }
 
         getLogger().info("ISHSMinecraftRpg 활성화 완료 (동아리 " + ClubConfig.all().size()
                 + "개, 아이템 " + CustomItems.getIds().size() + "종, 도전과제 " + AchievementConfig.all().size()
