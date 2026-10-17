@@ -5,24 +5,48 @@
 #      &0 검정  &1 남색  &2 초록  &3 청록  &4 진빨강  &5 보라  &6 금색  &7 회색
 #      &8 진회색 &9 파랑  &a 연두  &b 하늘  &c 빨강    &d 분홍  &e 노랑  &f 흰색
 #  - 값을 고친 뒤 게임에서 OP가  /설정리로드  를 입력하면 적용됩니다.
-#    (이미 플레이어가 가진 아이템의 이름/설명은 바뀌지 않고, 새로 지급하는 아이템부터 바뀝니다)
+#    (이미 플레이어가 가진 아이템의 이름/설명은 바뀌지 않고, 새로 지급하는 아이템부터 바뀝니다.
+#     효과(effects)는 아이템 ID로 읽기 때문에 이미 가진 아이템에도 바로 적용됩니다)
 #  - 아이템 지급:  /아이템지급 [플레이어] [아이템ID]
-#
-#  [중요] 아이템의 "효과"는 아이템ID에 코드가 연결되어 있습니다.
-#    demerit_card     공격 적중 시 대상 약화 (쿨타임 6초)
-#    wanil_staff      효과 없음 (겉모습만)
-#    jasmine_flower   우클릭 시 체력 회복 (소모품)
-#    schema           우클릭 시 힘/이동속도 증가 90초 (소모품)
-#    changbong_spear  공격 적중 시 대상을 밀쳐냄
-#    changbong_rod    공격 적중 시 대상을 하늘로 띄움
-#  위 ID의 이름, 재료, 설명은 자유롭게 바꿀 수 있지만 ID 자체를 바꾸면 효과가 사라집니다.
-#  새 ID를 추가하면 "효과 없는 장식용 아이템"이 만들어집니다. (효과는 개발자에게 요청)
 #
 #  항목 설명
 #    material    아이템 재료 (마인크래프트 영어 이름, 대문자. 예: PAPER, STICK, DIAMOND_SWORD)
 #    name        아이템 이름
 #    lore        설명문. 한 줄이 목록 하나입니다. 빈 줄은 ""
 #    unbreakable true면 내구도가 닳지 않음
+#    effects     아이템의 실제 기능 (아래 설명). 없으면 효과 없는 장식용 아이템
+#
+#  [효과 effects]  한 아이템에 여러 개를 넣을 수 있습니다.
+#    - trigger         언제 발동하나
+#                        RIGHT_CLICK  아이템을 들고 우클릭
+#                        HIT          아이템을 들고 대상을 공격해 적중
+#      cooldown        재사용 대기시간(초). 0이면 없음
+#      consume         true면 발동할 때 아이템 1개 소모 (RIGHT_CLICK 전용)
+#      message         사용한 플레이어에게 보낼 메시지 (색상 코드 사용 가능)
+#      target-message  맞은 대상이 플레이어일 때 그 대상에게 보낼 메시지 (HIT 전용)
+#      sound           효과음 이름 (대문자. 예: ITEM_HONEY_BOTTLE_DRINK)
+#      sound-volume    효과음 크기 (기본 1.0)
+#      sound-pitch     효과음 높낮이 (기본 1.0, 클수록 높음)
+#      particle        파티클 이름 (대문자. 예: HEART, ENCHANT)
+#      particle-count  파티클 개수 (기본 10)
+#      particle-spread 파티클이 퍼지는 범위 (기본 0.4)
+#      particle-speed  파티클 속도 (기본 0)
+#      actions         실제로 일어나는 일 (여러 개 가능)
+#          type: HEAL        사용자 체력 회복
+#                amount        회복량 (체력 2 = 하트 1칸)
+#          type: POTION      포션 효과 부여
+#                target        SELF(사용자, 기본) / TARGET(맞은 대상, HIT 전용)
+#                potion        효과 이름 (대문자. 예: STRENGTH, SPEED, WEAKNESS)
+#                seconds       지속시간(초)
+#                level         단계 (1 = I, 2 = II ...)
+#          type: KNOCKBACK   맞은 대상을 사용자 반대 방향으로 밀쳐냄 (HIT 전용)
+#                strength      세기 (클수록 멀리)
+#                lift          위로 뜨는 정도
+#          type: LAUNCH      맞은 대상을 위로 띄움 (HIT 전용)
+#                height        솟는 속도 (클수록 높이)
+#
+#  - 이름을 잘못 쓰면(재료, 효과음, 포션 등) 그 부분만 무시되고 서버 콘솔에 [items.yml] 경고가 나옵니다.
+#  - 새 아이템은 아이템 ID(영어 소문자, 띄어쓰기 없이)를 새로 만들어 추가합니다. 코드 수정은 필요 없습니다.
 # ============================================================
 
 items:
@@ -35,6 +59,19 @@ items:
       - ""
       - "&4공격 적중 시 대상에게 약화 효과 부여"
     unbreakable: true
+    effects:
+      - trigger: HIT
+        cooldown: 6
+        message: "&c📇 벌점카드 발동! 상대가 약화되었습니다."
+        target-message: "&c왕사감의 벌점카드에 정신이 아득해진다... (약화 효과)"
+        sound: ENTITY_VILLAGER_NO
+        sound-pitch: 0.6
+        actions:
+          - type: POTION
+            target: TARGET
+            potion: WEAKNESS
+            seconds: 5
+            level: 2
 
   wanil_staff:
     material: STICK
@@ -52,6 +89,19 @@ items:
       - ""
       - "&d우클릭 시 체력 회복 (소모품)"
     unbreakable: false
+    effects:
+      - trigger: RIGHT_CLICK
+        consume: true
+        message: "&d🌸 자스민 꽃을 상처에 발랐습니다. 통증이 가라앉는다..."
+        sound: ITEM_HONEY_BOTTLE_DRINK
+        sound-pitch: 1.2
+        particle: HEART
+        particle-count: 6
+        particle-spread: 0.4
+        particle-speed: 0.1
+        actions:
+          - type: HEAL
+            amount: 6
 
   schema:
     material: BOOK
@@ -61,6 +111,24 @@ items:
       - ""
       - "&6우클릭 시 일정 시간 무기 강화 및 이동속도 증가 (소모품)"
     unbreakable: false
+    effects:
+      - trigger: RIGHT_CLICK
+        consume: true
+        message: "&6📜 스키마를 발동합니다! (90초간 무기 강화 + 이동속도 증가)"
+        sound: BLOCK_ENCHANTMENT_TABLE_USE
+        particle: ENCHANT
+        particle-count: 40
+        particle-spread: 0.5
+        particle-speed: 1
+        actions:
+          - type: POTION
+            potion: STRENGTH
+            seconds: 90
+            level: 2
+          - type: POTION
+            potion: SPEED
+            seconds: 90
+            level: 2
 
   changbong_spear:
     material: TRIDENT
@@ -70,6 +138,13 @@ items:
       - ""
       - "&3공격 적중 시 대상을 강하게 찔러 밀쳐낸다"
     unbreakable: true
+    effects:
+      - trigger: HIT
+        sound: ITEM_TRIDENT_HIT
+        actions:
+          - type: KNOCKBACK
+            strength: 1.8
+            lift: 0.3
 
   changbong_rod:
     material: BLAZE_ROD
@@ -79,3 +154,10 @@ items:
       - ""
       - "&6공격 적중 시 대상을 후려쳐 하늘로 띄운다"
     unbreakable: true
+    effects:
+      - trigger: HIT
+        sound: ENTITY_IRON_GOLEM_ATTACK
+        sound-pitch: 1.4
+        actions:
+          - type: LAUNCH
+            height: 1.1

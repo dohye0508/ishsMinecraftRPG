@@ -24,7 +24,7 @@ ishsMinecraftRpg/
 │   ├── MapConfig.java          # 스폰/인증 장소/맵 경계 설정 로더 (config.yml)
 │   ├── ReloadCommand.java      # /설정리로드 (config 변경을 재시작 없이 적용)
 │   ├── auth/                   # 리로스쿨 계정 인증 (커맨드/리스너/매니저)
-│   ├── item/                   # 커스텀 아이템 로드(items.yml) 및 지급 로직
+│   ├── item/                   # 커스텀 아이템 로드·지급, 효과 해석/실행 (정의는 items.yml)
 │   ├── player/                 # 플레이어 데이터, 동아리(직업), 경험치, 스킬, 로비 등
 │   ├── stat/                   # 스탯(HP/MP/능력치) 시스템 및 GUI
 │   ├── listener/               # 개별 기능 리스너 (직사각형 맵 경계 포함)
