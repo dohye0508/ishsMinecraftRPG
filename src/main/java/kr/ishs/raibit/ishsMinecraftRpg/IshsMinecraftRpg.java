@@ -114,6 +114,10 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         return authManager;
     }
 
+    public StatManager getStatManager() {
+        return statManager;
+    }
+
     /**
      * 플러그인 폴더의 YAML 파일을 읽습니다. 파일이 없으면 jar 안의 기본 파일을 먼저 복사합니다.
      * 파일에서 빠진 항목은 jar 안의 기본 파일 값으로 채워지므로, 코드에 기본 숫자를 따로 두지 않아도 됩니다.

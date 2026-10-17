@@ -142,6 +142,9 @@ public class RpgListener implements Listener {
         Player player = event.getPlayer();
         plugin.applyWorldSettings(player.getWorld());
         PlayerManager.getInstance().loadPlayer(player);
+        // 데이터를 불러온 직후에 스탯(최대 HP/MP, 걷기 속도)을 적용한다.
+        // (StatListener 의 접속 처리는 이 리스너보다 먼저 실행되어 데이터가 없는 상태라 적용이 건너뛰어진다)
+        plugin.getStatManager().applyStats(player);
         // 입장 메시지는 AuthListener(인증 완료 후)에서 처리
     }
 

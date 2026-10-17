@@ -7,6 +7,8 @@ import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatGUI;
 import kr.ishs.raibit.ishsMinecraftRpg.stat.StatManager;
+import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -14,6 +16,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class StatListener implements Listener {
 
@@ -31,6 +34,29 @@ public class StatListener implements Listener {
         // 플레이어 데이터가 로드된 후 스탯 적용
         statManager.applyStats(player);
         statManager.updateActionBar(player);
+    }
+
+    /**
+     * 리스폰하면 HP/MP 를 가득 채운다. (커스텀 HP 는 죽어도 0 으로 남아 있어서, 채워 주지 않으면
+     * 리스폰 직후 아주 작은 피해에도 계속 죽는다)
+     */
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        Player player = event.getPlayer();
+        PlayerData data = playerManager.getPlayerData(player.getUniqueId());
+        if (data == null) return;
+
+        statManager.applyStats(player); // 최대 HP/MP 다시 계산
+        data.setCurrentHp(data.getMaxHp());
+        data.setCurrentMp(data.getMaxMp());
+
+        // 바닐라가 리스폰 때 체력을 채운 다음에 체력바와 액션바를 맞춘다
+        Bukkit.getScheduler().runTaskLater(IshsMinecraftRpg.getPlugin(IshsMinecraftRpg.class), () -> {
+            if (player.isOnline()) {
+                statManager.updateHealthBar(player);
+                statManager.updateActionBar(player);
+            }
+        }, 1L);
     }
 
     @EventHandler
