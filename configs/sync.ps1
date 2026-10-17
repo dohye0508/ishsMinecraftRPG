@@ -34,7 +34,9 @@ $plugins = Join-Path $serverRoot 'plugins'
 # Repo   : configs 안의 폴더,  Server : plugins 안의 폴더
 $maps = @(
     @{ Repo = 'ishsMinecraftRpg';                 Server = 'ishsMinecraftRpg';                 Filter = @('*.yml');                                                    Recurse = $false; Exclude = @() },
-    @{ Repo = 'BetonQuest\QuestPackages\default'; Server = 'BetonQuest\QuestPackages\default'; Filter = @('*.yml');                                                   Recurse = $true;  Exclude = @() },
+    @{ Repo = 'BetonQuest';                       Server = 'BetonQuest';                       Filter = @('config.yml');                                              Recurse = $false; Exclude = @() },
+    @{ Repo = 'BetonQuest\lang';                  Server = 'BetonQuest\lang';                  Filter = @('ko-KR.yml');                                               Recurse = $false; Exclude = @() },
+    @{ Repo = 'BetonQuest\QuestPackages\default'; Server = 'BetonQuest\QuestPackages\default'; Filter = @('*.yml');                                                   Recurse = $true;  Exclude = @('npcs_generated.yml') },
     @{ Repo = 'MythicMobs\Mobs';                  Server = 'MythicMobs\Mobs';                  Filter = @('*.yml');                                                   Recurse = $false; Exclude = @('Example*.yml', 'VanillaMobs.yml') }
 )
 
