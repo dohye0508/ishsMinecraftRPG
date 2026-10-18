@@ -86,6 +86,28 @@ public final class MapConfig {
         borderMaxZ = Math.max(z1, z2) + 1.0;
     }
 
+    /**
+     * config.yml 글에서 border: 아래의 enabled 줄만 true/false 로 바꿔 돌려준다. (주석을 지키려고 줄 단위로 고친다)
+     * border.enabled 줄을 찾지 못하면 null.
+     */
+    public static String withBorderEnabled(String text, boolean enabled) {
+        String[] lines = text.split("\n", -1);
+        boolean inBorder = false;
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].endsWith("\r") ? lines[i].substring(0, lines[i].length() - 1) : lines[i];
+            if (line.matches("^border:\\s*(#.*)?$")) {
+                inBorder = true;
+            } else if (!line.isEmpty() && !line.startsWith(" ") && !line.startsWith("#")) {
+                inBorder = false; // 다른 최상위 항목
+            } else if (inBorder && line.matches("^\\s+enabled:\\s*(true|false)\\s*(#.*)?$")) {
+                String cr = lines[i].endsWith("\r") ? "\r" : "";
+                lines[i] = line.replaceFirst("(enabled:\\s*)(true|false)", "$1" + enabled) + cr;
+                return String.join("\n", lines);
+            }
+        }
+        return null;
+    }
+
     /** 게임모드 이름(SURVIVAL, ADVENTURE, CREATIVE, SPECTATOR)을 읽고, 잘못되면 기본값을 쓴다 */
     private static org.bukkit.GameMode gameMode(String name, org.bukkit.GameMode fallback) {
         if (name == null || name.isBlank()) return fallback;

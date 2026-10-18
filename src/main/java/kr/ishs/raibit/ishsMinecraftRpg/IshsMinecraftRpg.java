@@ -6,6 +6,7 @@ import kr.ishs.raibit.ishsMinecraftRpg.auth.AuthManager;
 import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderListener;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.StatListener;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcCommand;
@@ -105,6 +106,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("입장허용").setExecutor(new EntryGateCommand(rpgListener));
         getCommand("엔피씨").setExecutor(new NpcCommand(this));
         getCommand("랭킹판").setExecutor(new RankingCommand(this));
+        getCommand("맵경계").setExecutor(new MapBorderCommand(this, mapBorderListener));
         getCommand("동아리점수").setExecutor(new ClubScoreCommand());
         getCommand("스탯조정").setExecutor(new PlayerAdjustCommand(this));
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));

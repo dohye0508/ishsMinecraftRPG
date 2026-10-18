@@ -50,6 +50,10 @@ commands:
     description: 동아리 점수를 수동으로 조절합니다 (관리자 전용)
     usage: /동아리점수 [목록|설정|추가|초기화]
     aliases: [clubscore]
+  맵경계:
+    description: 맵 경계(직사각형 월드보더)를 바로 켜거나 끕니다 (관리자 전용)
+    usage: /맵경계 [켜기|끄기|상태]
+    aliases: [mapborder, 경계]
   랭킹판:
     description: 동아리 랭킹판을 바라보는 벽에 설치하거나 삭제합니다 (관리자 전용)
     usage: /랭킹판 [설치|삭제]

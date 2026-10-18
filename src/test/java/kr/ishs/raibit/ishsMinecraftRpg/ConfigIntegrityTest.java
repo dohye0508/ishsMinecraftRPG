@@ -80,6 +80,8 @@ class ConfigIntegrityTest {
         put("scoreboard.cooldown", "seconds");
         put("ranking-board.installed", "x", "y", "z");
         put("club-score.list-line", "club", "score");
+        put("map-border.status", "state");
+        put("map-border.range", "min-x", "max-x", "min-z", "max-z");
         put("admin.usage", "fields");
         put("admin.player-not-found", "player");
         put("admin.unknown-field", "field", "fields");
