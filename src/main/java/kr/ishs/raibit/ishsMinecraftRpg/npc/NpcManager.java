@@ -73,6 +73,7 @@ public final class NpcManager {
         // 2. 목록의 NPC 를 만들거나 갱신한다
         Map<String, Integer> ids = new LinkedHashMap<>();
         for (NpcConfig.Npc def : defs.values()) {
+            try {
             World world = def.world.isEmpty() ? defaultWorld() : Bukkit.getWorld(def.world);
             if (world == null) {
                 plugin.getLogger().warning("[npcs.yml] '" + def.key + "' 의 월드 '" + def.world + "' 를 찾을 수 없어 건너뜁니다.");
@@ -91,11 +92,8 @@ public final class NpcManager {
                 }
             }
 
-            // 사람이 아닌 NPC(고양이 등)는 이름표 모양(검은 배경)의 홀로그램으로 이름을 보여 준다.
-            // 사람 NPC 는 기본 이름표가 이미 검은 배경이라 건드리지 않는다.
-            if (def.type != EntityType.PLAYER) {
-                npc.data().setPersistent(NPC.Metadata.HOLOGRAM_RENDERER, "interaction");
-            }
+            // 이름을 항상 홀로그램으로 그리게 하는 값은 쓰지 않는다. (예전 버전이 저장해 둔 값을 되돌린다. 홀로그램 이름은 검은 배경이 없다)
+            npc.setAlwaysUseNameHologram(false);
 
             if (!npc.isSpawned()) {
                 npc.spawn(loc);
@@ -109,6 +107,10 @@ public final class NpcManager {
             }
             if (def.type == EntityType.CAT) applyCat(npc, def);
             ids.put(def.key, npc.getId());
+            } catch (RuntimeException e) {
+                // 한 NPC 의 오류가 다른 NPC 와 BetonQuest 연결까지 막지 않도록 그 NPC 만 건너뛴다
+                plugin.getLogger().warning("[npcs.yml] '" + def.key + "' 를 만드는 중 오류로 건너뜁니다: " + e);
+            }
         }
 
         writeBetonQuestBindings(ids, defs);
