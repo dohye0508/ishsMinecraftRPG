@@ -1,0 +1,14 @@
+conversations:
+  incheon_science_cat:
+    quester: "인천과학고양이"
+    first: start
+    NPC_options:
+      start:
+        text: "&6[인천과학고양이]&f 냐아옹~ (이 학교의 진짜 주인은 나다냥. 간식은 가져왔냥?)"
+        pointers: end_ok
+      q_end:
+        text: "&7[시스템]&f 대화가 종료되었습니다."
+    player_options:
+      end_ok:
+        text: "[쓰다듬고 지나간다]"
+        pointers: q_end

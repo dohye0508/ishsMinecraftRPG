@@ -5,11 +5,14 @@ import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
+import net.citizensnpcs.api.trait.trait.MobType;
 import net.citizensnpcs.trait.LookClose;
 import net.citizensnpcs.trait.SkinTrait;
+import net.citizensnpcs.trait.versioned.CatTrait;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Cat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
@@ -22,6 +25,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import kr.ishs.raibit.ishsMinecraftRpg.config.Constants;
 
 /**
  * npcs.yml 의 내용대로 Citizens NPC 를 만들고, 옮기고, 지운다. (YAML 이 기준이고 게임 안 NPC 는 결과물이다)
@@ -77,10 +82,13 @@ public final class NpcManager {
 
             NPC npc = existing.get(def.key);
             if (npc == null) {
-                npc = registry.createNPC(EntityType.PLAYER, Messages.color(def.name));
+                npc = registry.createNPC(def.type, Messages.color(def.name));
                 npc.data().setPersistent(DATA_KEY, def.key);
             } else {
                 npc.setName(Messages.color(def.name));
+                if (npc.getOrAddTrait(MobType.class).getType() != def.type) {
+                    npc.setBukkitEntityType(def.type); // 형태가 바뀌었으면 다시 만들어진다
+                }
             }
 
             if (!npc.isSpawned()) {
@@ -90,14 +98,29 @@ public final class NpcManager {
             }
 
             npc.getOrAddTrait(LookClose.class).lookClose(def.lookAtPlayer);
-            if (!def.skin.isEmpty()) {
+            if (def.type == EntityType.PLAYER && !def.skin.isEmpty()) {
                 npc.getOrAddTrait(SkinTrait.class).setSkinName(def.skin);
             }
+            if (def.type == EntityType.CAT) applyCat(npc, def);
             ids.put(def.key, npc.getId());
         }
 
         writeBetonQuestBindings(ids, defs);
         return ids.size();
+    }
+
+    /** 고양이 NPC 의 무늬와 자세. variant 는 Cat.Type 이름(예: BRITISH_SHORTHAIR) */
+    private void applyCat(NPC npc, NpcConfig.Npc def) {
+        CatTrait trait = npc.getOrAddTrait(CatTrait.class);
+        if (!def.variant.isEmpty()) {
+            Cat.Type variant = Constants.find(Cat.Type.class, def.variant);
+            if (variant != null) {
+                trait.setType(variant);
+            } else {
+                plugin.getLogger().warning("[npcs.yml] '" + def.key + "' 의 variant '" + def.variant + "' 를 찾을 수 없어 무시합니다. (예: TABBY, BLACK, SIAMESE, BRITISH_SHORTHAIR, CALICO)");
+            }
+        }
+        trait.setSitting(def.sitting);
     }
 
     private World defaultWorld() {

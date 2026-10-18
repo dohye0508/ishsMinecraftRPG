@@ -1,12 +1,14 @@
 package kr.ishs.raibit.ishsMinecraftRpg.npc;
 
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.EntityType;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -25,18 +27,24 @@ public final class NpcConfig {
     public static final class Npc {
         public final String key;
         public final String name;
-        public final String skin;          // 비어 있으면 스킨 지정 없음
+        public final EntityType type;      // NPC 형태 (기본 PLAYER, 예: CAT)
+        public final String skin;          // 비어 있으면 스킨 지정 없음 (PLAYER 형태에만 적용)
+        public final String variant;       // 형태별 세부 종류 (CAT 의 무늬 등). 비어 있으면 지정 없음
+        public final boolean sitting;      // 앉아 있는 자세 (CAT 등)
         public final String world;         // 비어 있으면 기본 월드
         public final double x, y, z;
         public final float yaw, pitch;
         public final boolean lookAtPlayer;
         public final String conversation;  // BetonQuest 대화 이름 (conversations/<이름>.yml)
 
-        Npc(String key, String name, String skin, String world, double x, double y, double z,
-            float yaw, float pitch, boolean lookAtPlayer, String conversation) {
+        Npc(String key, String name, EntityType type, String skin, String variant, boolean sitting, String world,
+            double x, double y, double z, float yaw, float pitch, boolean lookAtPlayer, String conversation) {
             this.key = key;
             this.name = name;
+            this.type = type;
             this.skin = skin;
+            this.variant = variant;
+            this.sitting = sitting;
             this.world = world;
             this.x = x;
             this.y = y;
@@ -81,7 +89,10 @@ public final class NpcConfig {
             out.put(key, new Npc(
                     key,
                     s.getString("name", key),
+                    parseType(s.getString("type", "PLAYER"), key, log),
                     s.getString("skin", ""),
+                    s.getString("variant", ""),
+                    s.getBoolean("sitting", false),
                     s.getString("world", ""),
                     s.getDouble("location.x") + ox,
                     s.getDouble("location.y") + oy,
@@ -108,6 +119,18 @@ public final class NpcConfig {
         sb.append("npc_conversations:\n");
         for (String k : keys) sb.append("  ").append(k).append(": ").append(defs.get(k).conversation).append("\n");
         return sb.toString();
+    }
+
+    /** 형태 이름(EntityType). 알 수 없거나 NPC 로 쓸 수 없으면 경고하고 PLAYER. */
+    private static EntityType parseType(String raw, String key, Logger log) {
+        try {
+            EntityType type = EntityType.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+            if (type.isAlive() || type == EntityType.PLAYER) return type;
+        } catch (IllegalArgumentException ignored) {
+            // 아래에서 경고
+        }
+        if (log != null) log.warning("[npcs.yml] '" + key + "' 의 type '" + raw + "' 를 쓸 수 없어 PLAYER 로 만듭니다. (예: PLAYER, CAT)");
+        return EntityType.PLAYER;
     }
 
     private static void warn(Logger log, String key, String why) {
