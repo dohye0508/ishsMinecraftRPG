@@ -50,7 +50,7 @@ npcs:
     conversation: vice_principal
 
   incheon_science_cat:
-    name: "&6인천과학고양이"
+    name: "&0인천과학고양이"
     type: CAT
     variant: BRITISH_SHORTHAIR
     location: {x: 315.24, y: -61.06, z: 172.16, yaw: 17}
