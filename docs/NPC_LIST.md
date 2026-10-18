@@ -8,6 +8,7 @@ NPC는 [`configs/ishsMinecraftRpg/npcs.yml`](../configs/ishsMinecraftRpg/npcs.ym
 | :--- | :--- | :--- | :--- |
 | `principal` | 교장선생님 | `conversations/principal.yml` | 전쟁을 부추기는 최종 통제자 |
 | `vice_principal` | 교감선생님 | `conversations/vice_principal.yml` | 첫 인증 환영 및 안내 |
+| `incheon_science_cat` | 인천과학고양이 (고양이 모습) | `conversations/incheon_science_cat.yml` | 학교의 마스코트. 임시 대사 |
 
 > 좌표는 임시값입니다. 최초 스폰 근처에 두었으니 실제 위치로 고칩니다.
 
