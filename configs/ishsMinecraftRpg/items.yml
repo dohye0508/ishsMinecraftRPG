@@ -186,3 +186,87 @@ items:
             potion: SPEED
             seconds: 30
             level: 1              # 1단계 = 이동속도 +20%
+
+  # ---- Padlet 기획 아이템 (효과 수치는 임시 제안이니 자유롭게 조정하세요) ----
+  jeonhaeseong:
+    material: NETHER_STAR
+    name: "&b전해성 (剪海星)"
+    lore:
+      - "&7바다를 가르는 별."
+      - ""
+      - "&b우클릭 시 60초간 물속을 자유롭게 이동 (재사용 대기 90초)"
+    unbreakable: true
+    effects:
+      - trigger: RIGHT_CLICK
+        cooldown: 90
+        message: "&b🌊 바다가 길을 내어 준다! (수중 호흡 + 돌고래의 은총, 60초)"
+        sound: ENTITY_DOLPHIN_PLAY
+        particle: BUBBLE_POP
+        particle-count: 30
+        particle-spread: 0.6
+        actions:
+          - type: POTION
+            potion: WATER_BREATHING
+            seconds: 60
+            level: 1
+          - type: POTION
+            potion: DOLPHINS_GRACE
+            seconds: 60
+            level: 1
+
+  cyburger:
+    material: COOKED_BEEF
+    name: "&6싸이버거"
+    lore:
+      - "&7한 입 베어 물면 힘이 솟는 학교 앞 전설의 버거."
+      - ""
+      - "&6우클릭 시 체력 회복 + 잠시 재생 (소모품)"
+    unbreakable: false
+    effects:
+      - trigger: RIGHT_CLICK
+        consume: true
+        message: "&6🍔 싸이버거를 먹었다! 든든하다..."
+        sound: ENTITY_GENERIC_EAT
+        actions:
+          - type: HEAL
+            amount: 8
+          - type: POTION
+            potion: REGENERATION
+            seconds: 10
+            level: 1
+
+  kyungsoo_soul:
+    material: SOUL_LANTERN
+    name: "&3경수킴님의 영혼"
+    lore:
+      - "&7어딘가 익숙한 영혼이 등불 속에서 일렁인다."
+      - ""
+      - "&3우클릭 시 20초간 몸을 보호하는 영혼의 막 (재사용 대기 120초)"
+    unbreakable: true
+    effects:
+      - trigger: RIGHT_CLICK
+        cooldown: 120
+        message: "&3👻 영혼이 당신을 감싼다! (흡수 체력 + 저항, 20초)"
+        sound: PARTICLE_SOUL_ESCAPE
+        particle: SOUL
+        particle-count: 20
+        particle-spread: 0.5
+        particle-speed: 0.02
+        actions:
+          - type: POTION
+            potion: ABSORPTION
+            seconds: 20
+            level: 2
+          - type: POTION
+            potion: RESISTANCE
+            seconds: 20
+            level: 1
+
+  # 영교쌤 강제 퀘스트(신나는 설교시간) 보상용. 효과 없이 이름과 설명만 있는 장식 아이템입니다.
+  dirty_labcoat:
+    material: LEATHER_CHESTPLATE
+    name: "&7꼬질꼬질한 실험복"
+    lore:
+      - "&7영교쌤의 설교를 끝까지 버틴 자에게 주어지는 실험복."
+      - "&7왠지 퀘퀘한 냄새가 난다."
+    unbreakable: true
