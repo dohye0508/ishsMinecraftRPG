@@ -157,7 +157,10 @@ public class RpgListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTimeSkip(TimeSkipEvent event) {
-        if (!GameplayConfig.allowTimeSkip) event.setCancelled(true);
+        // 침대로 자서 밤을 건너뛰는 것만 막는다. /time set 같은 관리자 명령(COMMAND)은 항상 허용한다.
+        if (!GameplayConfig.allowTimeSkip && event.getSkipReason() == TimeSkipEvent.SkipReason.NIGHT_SKIP) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

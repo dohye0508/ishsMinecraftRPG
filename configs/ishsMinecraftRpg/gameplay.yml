@@ -157,7 +157,7 @@ rewards:
 rules:
   survival-block-break: false  # true: 서바이벌에서도 블록을 부술 수 있음
   spawn-animals: false         # true: 동물과 박쥐가 자연 스폰됨
-  allow-time-skip: false       # true: 수면 등으로 밤을 건너뛸 수 있음
+  allow-time-skip: false       # true: 잠을 자서 밤을 건너뛸 수 있음 (/time set 같은 관리자 명령은 이 값과 상관없이 항상 가능)
   hunger-loss: false           # true: 배고픔 게이지가 줄어듦
   explosion-block-damage: false  # true: 폭발이 블록을 부숨
   glowing-players: true        # true: 인증을 마친 플레이어에게 발광 효과 (이름표/윤곽 표시)
