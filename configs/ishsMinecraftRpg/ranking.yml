@@ -8,7 +8,8 @@
 #
 #    enabled         false 면 랭킹판을 보여 주지 않음
 #    update-seconds  순위를 새로 그리는 간격(초)
-#    scale           글씨 크기 배율 (1 = 기본, 3 = 3배)
+#    scale           글씨 크기 배율 (1 = 기본, 2 = 2배). 너무 크면 줄이세요
+#    brightness      글씨 자체 밝기 0~15 (15 = 가장 밝음, 어두운 곳에서도 잘 보임). -1 이면 주변 밝기를 따름
 #    background      true 면 글씨 뒤에 반투명 검은 배경
 #    title           맨 윗줄 제목. 비우면 제목 없음 (색상 코드 & 사용 가능)
 #    line            순위 한 줄의 모양. 동아리 수만큼 위에서부터 반복됩니다.
@@ -20,7 +21,10 @@
 
 enabled: true
 update-seconds: 5
-scale: 3
+scale: 2
+brightness: 15
 background: true
 title: "&6&l동아리 랭킹"
 line: "&f{rank}위 {club} &f{score}점"
+world: "world"
+location: {x: 294.03, y: -60.49, z: 163.56, yaw: -90}

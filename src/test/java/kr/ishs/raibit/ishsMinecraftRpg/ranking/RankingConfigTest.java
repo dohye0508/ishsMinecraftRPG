@@ -48,7 +48,14 @@ class RankingConfigTest {
     void invalidValuesFallBack() {
         RankingConfig.Settings s = RankingConfig.parse(yaml("update-seconds: 0\nscale: -2"), null);
         assertEquals(100, s.updateTicks);
-        assertEquals(3.0, s.scale);
+        assertEquals(2.0, s.scale);
+    }
+
+    @Test
+    void brightnessDefaultsToMaxAndRejectsOutOfRange() {
+        assertEquals(15, RankingConfig.parse(yaml("title: x"), null).brightness);
+        assertEquals(-1, RankingConfig.parse(yaml("brightness: -1"), null).brightness);
+        assertEquals(15, RankingConfig.parse(yaml("brightness: 99"), null).brightness);
     }
 
     @Test
@@ -91,6 +98,6 @@ class RankingConfigTest {
         while (m.find()) {
             assertTrue(List.of("rank", "club", "score").contains(m.group(1)), "line 의 {" + m.group(1) + "} 는 쓸 수 없습니다");
         }
-        assertFalse(s.hasLocation, "저장소 기본 파일에는 위치를 넣지 않습니다 (서버에서 /랭킹판 설치로 정함)");
+        // 위치(world, location)는 서버에서 /랭킹판 설치로 정해 저장소에 가져온 값이라 있어도 없어도 된다
     }
 }

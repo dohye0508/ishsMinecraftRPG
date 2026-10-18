@@ -53,6 +53,6 @@ npcs:
     name: "&6인천과학고양이"
     type: CAT
     variant: BRITISH_SHORTHAIR
-    location: {x: 307.5, y: -61, z: 160.5, yaw: 0}   # 임시 좌표: /엔피씨 이동 incheon_science_cat
+    location: {x: 315.24, y: -61.06, z: 172.16, yaw: 17}
     look-at-player: true
     conversation: incheon_science_cat
