@@ -162,18 +162,36 @@ npc:
 
 # ---- 사이드바 (화면 오른쪽 정보창) ----
 # 한 줄이 목록 하나이고, 위에서부터 차례로 표시됩니다. (최대 15줄까지 보입니다)
-# 쓸 수 있는 자리: {level} {player} {exp} {exp-required} {str} {dex} {int} {hp} {wis} {club} {cooldown} {mp} {max-mp}
-# 동아리 랭킹은 여기가 아니라 월드 랭킹판(ranking.yml)에 표시합니다. 스탯은 /stat 에서 봅니다.
+# 빈 줄은 " " (공백 한 칸) 으로 적습니다.
+# 쓸 수 있는 자리:
+#   {player} {level} {club} {cooldown}
+#   {exp} {exp-required} {exp-percent} {exp-bar}      경험치 (숫자, 퍼센트, 막대)
+#   {mp} {max-mp} {mp-bar}                            마나 (숫자, 막대)
+#   {str} {dex} {int} {hp} {wis}                      스탯 (기본 화면에서는 /stat 으로 보므로 쓰지 않음)
+# 동아리 랭킹은 여기가 아니라 월드 랭킹판(ranking.yml)에 표시합니다.
 scoreboard:
-  title: "&6ISHS RPG"
+  title: "&6&lISHS RPG"
   lines:
-    - "&fLv. {level} {player}"
-    - "&fEXP: {exp} / {exp-required}"
-    - "&f소속: &e{club}"
-    - "&b💧 마나: {mp} / {max-mp}"
-    - "&f스킬:{cooldown}"
-  club-none: "없음"                       # 동아리가 없을 때 {club}
-  cooldown: "&e (쿨타임 {seconds}초)"      # 스킬 쿨타임 중일 때 {cooldown}
+    - "&e&l{player} &7Lv.{level}"
+    - "&8━━━━━━━━━━━━━━"
+    - "&f소속 &8» &e{club}"
+    - " "
+    - "&aEXP &7{exp-percent}%"
+    - "{exp-bar}"
+    - "&bMP &7{mp}/{max-mp}"
+    - "{mp-bar}"
+    - " "
+    - "&f스킬 &8» {cooldown}"
+  club-none: "&7없음"                     # 동아리가 없을 때 {club}
+  skill-ready: "&a사용 가능"                # 스킬을 쓸 수 있을 때 {cooldown}
+  cooldown: "&e쿨타임 {seconds}초"          # 스킬 쿨타임 중일 때 {cooldown}
+  # 막대 그래프 모양 ({exp-bar}, {mp-bar})
+  bar-length: "10"                         # 칸 수
+  bar-char-filled: "▰"                     # 채워진 칸 모양
+  bar-char-empty: "▱"                      # 빈 칸 모양
+  bar-exp-color: "&a"                      # 경험치 막대 색
+  bar-mp-color: "&b"                       # 마나 막대 색
+  bar-empty-color: "&8"                    # 빈 칸 색
 
 
 # ---- 랭킹판 (/랭킹판, 관리자 전용) ----

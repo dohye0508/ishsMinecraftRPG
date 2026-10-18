@@ -77,6 +77,8 @@ public final class RankingBoard {
             d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(),
                     new Vector3f((float) s.scale, (float) s.scale, (float) s.scale), new AxisAngle4f()));
             d.setViewRange(1.5f);
+            // 주변이 어두워도(벽 안쪽, 그늘) 글씨가 밝게 보이도록 자체 밝기를 준다
+            if (s.brightness >= 0) d.setBrightness(new Display.Brightness(s.brightness, s.brightness));
         });
     }
 

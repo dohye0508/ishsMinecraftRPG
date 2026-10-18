@@ -54,7 +54,12 @@ public class RpgUpdateTask implements Runnable {
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         int remainCd = skillManager.getRemainCooldown(p.getUniqueId());
-        String cooldownText = remainCd > 0 ? Messages.get("scoreboard.cooldown", "seconds", remainCd) : "";
+        String cooldownText = remainCd > 0
+                ? Messages.get("scoreboard.cooldown", "seconds", remainCd)
+                : Messages.get("scoreboard.skill-ready");
+
+        double expRatio = pd.getRequiredExp() > 0 ? pd.getExperience() / pd.getRequiredExp() : 0.0;
+        double mpRatio = pd.getMaxMp() > 0 ? pd.getCurrentMp() / pd.getMaxMp() : 0.0;
 
         List<String> templateLines = Messages.list("scoreboard.lines",
                 "level", pd.getLevel(),
@@ -69,7 +74,10 @@ public class RpgUpdateTask implements Runnable {
                 "club", pd.hasClub() ? pd.getClub() : Messages.get("scoreboard.club-none"),
                 "cooldown", cooldownText,
                 "mp", (int) pd.getCurrentMp(),
-                "max-mp", (int) pd.getMaxMp());
+                "max-mp", (int) pd.getMaxMp(),
+                "exp-percent", (int) Math.floor(Math.max(0.0, Math.min(1.0, expRatio)) * 100),
+                "exp-bar", bar(expRatio, "scoreboard.bar-exp-color"),
+                "mp-bar", bar(mpRatio, "scoreboard.bar-mp-color"));
         List<String> lines = templateLines;
 
         // 사이드바는 같은 글자의 줄을 하나로 합치므로, 겹치면 보이지 않는 서식 코드를 덧붙여 구분한다
@@ -82,6 +90,19 @@ public class RpgUpdateTask implements Runnable {
         }
 
         p.setScoreboard(board);
+    }
+
+    /** messages.yml 의 scoreboard.bar-* 설정대로 막대 그래프를 만든다. */
+    private static String bar(double ratio, String filledColorKey) {
+        int length;
+        try {
+            length = Integer.parseInt(Messages.get("scoreboard.bar-length").trim());
+        } catch (NumberFormatException e) {
+            length = 10;
+        }
+        return ProgressBar.render(ratio, length,
+                Messages.get(filledColorKey), Messages.get("scoreboard.bar-char-filled"),
+                Messages.get("scoreboard.bar-empty-color"), Messages.get("scoreboard.bar-char-empty"));
     }
 
     private void regenerateMana(Player p) {

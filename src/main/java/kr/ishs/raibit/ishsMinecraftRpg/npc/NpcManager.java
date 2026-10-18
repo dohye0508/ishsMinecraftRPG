@@ -91,6 +91,9 @@ public final class NpcManager {
                 }
             }
 
+            // 사람이 아닌 NPC(고양이 등)도 사람 NPC 와 같은 이름표(검은 배경)로 보이게 한다
+            npc.setAlwaysUseNameHologram(true);
+
             if (!npc.isSpawned()) {
                 npc.spawn(loc);
             } else if (moved(npc.getStoredLocation(), loc)) {

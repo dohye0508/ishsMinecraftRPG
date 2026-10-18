@@ -76,7 +76,7 @@ class ConfigIntegrityTest {
         put("npc.write-failed", "error");
         put("npc.added", "key", "name");
         put("scoreboard.lines", "level", "player", "exp", "exp-required", "str", "dex", "int", "hp", "wis",
-                "club", "cooldown", "mp", "max-mp");
+                "club", "cooldown", "mp", "max-mp", "exp-percent", "exp-bar", "mp-bar");
         put("scoreboard.cooldown", "seconds");
         put("ranking-board.installed", "x", "y", "z");
         put("ranking-board.write-failed", "error");

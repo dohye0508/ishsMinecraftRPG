@@ -25,6 +25,7 @@ public final class RankingConfig {
         public final int updateTicks;
         public final double scale;
         public final boolean background;
+        public final int brightness;      // 0~15, 15 가 가장 밝음. -1 이면 주변 밝기를 따름
         public final String title;
         public final String line;
         public final String world;      // 비어 있으면 기본 월드
@@ -32,12 +33,13 @@ public final class RankingConfig {
         public final double x, y, z;
         public final float yaw;
 
-        Settings(boolean enabled, int updateTicks, double scale, boolean background, String title, String line,
+        Settings(boolean enabled, int updateTicks, double scale, boolean background, int brightness, String title, String line,
                  String world, boolean hasLocation, double x, double y, double z, float yaw) {
             this.enabled = enabled;
             this.updateTicks = updateTicks;
             this.scale = scale;
             this.background = background;
+            this.brightness = brightness;
             this.title = title;
             this.line = line;
             this.world = world;
@@ -66,16 +68,22 @@ public final class RankingConfig {
             warn(log, "update-seconds 는 1 이상이어야 합니다. 5초로 대신합니다.");
             seconds = 5;
         }
-        double scale = c.getDouble("scale", 3.0);
+        double scale = c.getDouble("scale", 2.0);
         if (scale <= 0) {
-            warn(log, "scale 은 0보다 커야 합니다. 3 으로 대신합니다.");
-            scale = 3.0;
+            warn(log, "scale 은 0보다 커야 합니다. 2 로 대신합니다.");
+            scale = 2.0;
+        }
+        int brightness = c.getInt("brightness", 15);
+        if (brightness < -1 || brightness > 15) {
+            warn(log, "brightness 는 -1(주변 밝기)~15 여야 합니다. 15 로 대신합니다.");
+            brightness = 15;
         }
         return new Settings(
                 c.getBoolean("enabled", true),
                 seconds * 20,
                 scale,
                 c.getBoolean("background", true),
+                brightness,
                 c.getString("title", ""),
                 c.getString("line", "&f{rank}위 {club} &f{score}점"),
                 c.getString("world", ""),
