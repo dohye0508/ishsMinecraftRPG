@@ -91,8 +91,11 @@ public final class NpcManager {
                 }
             }
 
-            // 사람이 아닌 NPC(고양이 등)도 사람 NPC 와 같은 이름표(검은 배경)로 보이게 한다
-            npc.setAlwaysUseNameHologram(true);
+            // 사람이 아닌 NPC(고양이 등)는 이름표 모양(검은 배경)의 홀로그램으로 이름을 보여 준다.
+            // 사람 NPC 는 기본 이름표가 이미 검은 배경이라 건드리지 않는다.
+            if (def.type != EntityType.PLAYER) {
+                npc.data().setPersistent(NPC.Metadata.HOLOGRAM_RENDERER, "interaction");
+            }
 
             if (!npc.isSpawned()) {
                 npc.spawn(loc);

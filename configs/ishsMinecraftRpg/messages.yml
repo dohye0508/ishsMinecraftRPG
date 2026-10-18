@@ -172,7 +172,7 @@ npc:
 scoreboard:
   title: "&6&lISHS RPG"
   lines:
-    - "&e&l{player} &7Lv.{level}"
+    - "&e{player} &7Lv.{level}"
     - "&8━━━━━━━━━━━━━━"
     - "&f소속 &8» &e{club}"
     - " "
