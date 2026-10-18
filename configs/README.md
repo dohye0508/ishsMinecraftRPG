@@ -12,6 +12,7 @@ configs/
 │   ├── skills.yml                 스킬 (쿨타임, 마나, 피해량)
 │   ├── items.yml                  커스텀 아이템 (이름, 설명, 기능)
 │   ├── npcs.yml                   NPC (위치, 이름, 스킨, 연결할 대화)
+│   ├── ranking.yml                월드 동아리 랭킹판 (크기, 문구, 위치)
 │   ├── achievements.yml           도전과제 이름·설명·알림 문구
 │   ├── messages.yml               알림·안내·GUI·사이드바 문구
 │   └── help.yml                   /도움말 문구
@@ -26,7 +27,8 @@ configs/
 │   └── beginners.yml              몬스터 정의
 ├── 배포.bat                       configs → 서버로 적용
 ├── 미리보기_배포.bat              배포하면 무엇이 바뀌는지만 확인 (복사 안 함)
-└── 서버에서_가져오기.bat          서버 → configs 로 가져오기
+├── 서버에서_가져오기.bat          서버 → configs 로 가져오기
+└── 월드백업.bat                   서버 world(맵)를 날짜가 붙은 zip 으로 저장 (서버를 끈 뒤 실행)
 ```
 
 ## 작업 순서

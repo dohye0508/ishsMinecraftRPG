@@ -1,10 +1,8 @@
 package kr.ishs.raibit.ishsMinecraftRpg.task;
 
 import kr.ishs.raibit.ishsMinecraftRpg.IshsMinecraftRpg;
-import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
-import kr.ishs.raibit.ishsMinecraftRpg.player.ClubScoreManager;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerData;
 import kr.ishs.raibit.ishsMinecraftRpg.player.PlayerManager;
 import kr.ishs.raibit.ishsMinecraftRpg.player.SkillManager;
@@ -17,7 +15,6 @@ import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,11 +22,9 @@ import java.util.Set;
 /**
  * 1초마다 플레이어별 사이드바, 마나 재생, 발광 효과, Tab 목록을 갱신한다.
  * 사이드바/Tab 문구와 줄 구성은 messages.yml, 마나 재생 공식은 gameplay.yml 에서 온다.
+ * (동아리 랭킹은 사이드바가 아니라 월드 랭킹판. ranking 패키지 참고)
  */
 public class RpgUpdateTask implements Runnable {
-
-    /** 사이드바 템플릿에서 {club-ranking} 한 줄을 동아리 랭킹 줄들로 바꾸기 위한 임시 표식 */
-    private static final String RANKING_MARKER = "\u0001club-ranking\u0001";
 
     private final IshsMinecraftRpg plugin;
     private final SkillManager skillManager;
@@ -59,7 +54,12 @@ public class RpgUpdateTask implements Runnable {
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         int remainCd = skillManager.getRemainCooldown(p.getUniqueId());
-        String cooldownText = remainCd > 0 ? Messages.get("scoreboard.cooldown", "seconds", remainCd) : "";
+        String cooldownText = remainCd > 0
+                ? Messages.get("scoreboard.cooldown", "seconds", remainCd)
+                : Messages.get("scoreboard.skill-ready");
+
+        double expRatio = pd.getRequiredExp() > 0 ? pd.getExperience() / pd.getRequiredExp() : 0.0;
+        double mpRatio = pd.getMaxMp() > 0 ? pd.getCurrentMp() / pd.getMaxMp() : 0.0;
 
         List<String> templateLines = Messages.list("scoreboard.lines",
                 "level", pd.getLevel(),
@@ -75,17 +75,10 @@ public class RpgUpdateTask implements Runnable {
                 "cooldown", cooldownText,
                 "mp", (int) pd.getCurrentMp(),
                 "max-mp", (int) pd.getMaxMp(),
-                "club-ranking", RANKING_MARKER);
-
-        // {club-ranking} 줄을 동아리 랭킹 줄들로 펼친다
-        List<String> lines = new ArrayList<>();
-        for (String line : templateLines) {
-            if (line.equals(RANKING_MARKER)) {
-                lines.addAll(rankingLines());
-            } else {
-                lines.add(line.replace(RANKING_MARKER, ""));
-            }
-        }
+                "exp-percent", (int) Math.floor(Math.max(0.0, Math.min(1.0, expRatio)) * 100),
+                "exp-bar", bar(expRatio, "scoreboard.bar-exp-color"),
+                "mp-bar", bar(mpRatio, "scoreboard.bar-mp-color"));
+        List<String> lines = templateLines;
 
         // 사이드바는 같은 글자의 줄을 하나로 합치므로, 겹치면 보이지 않는 서식 코드를 덧붙여 구분한다
         Set<String> used = new HashSet<>();
@@ -99,19 +92,17 @@ public class RpgUpdateTask implements Runnable {
         p.setScoreboard(board);
     }
 
-    /** 동아리 점수 순위 줄들. 점수가 같으면 clubs.yml 의 순서를 따른다. */
-    private List<String> rankingLines() {
-        ClubScoreManager scoreMgr = ClubScoreManager.getInstance();
-        List<ClubConfig.Club> clubs = ClubConfig.all();
-        clubs.sort((c1, c2) -> Integer.compare(scoreMgr.getScore(c2.id), scoreMgr.getScore(c1.id)));
-
-        List<String> out = new ArrayList<>();
-        for (int i = 0; i < clubs.size(); i++) {
-            ClubConfig.Club club = clubs.get(i);
-            out.add(Messages.get("scoreboard.ranking-line",
-                    "rank", i + 1, "club", club.prefix(), "score", scoreMgr.getScore(club.id)));
+    /** messages.yml 의 scoreboard.bar-* 설정대로 막대 그래프를 만든다. */
+    private static String bar(double ratio, String filledColorKey) {
+        int length;
+        try {
+            length = Integer.parseInt(Messages.get("scoreboard.bar-length").trim());
+        } catch (NumberFormatException e) {
+            length = 10;
         }
-        return out;
+        return ProgressBar.render(ratio, length,
+                Messages.get(filledColorKey), Messages.get("scoreboard.bar-char-filled"),
+                Messages.get("scoreboard.bar-empty-color"), Messages.get("scoreboard.bar-char-empty"));
     }
 
     private void regenerateMana(Player p) {

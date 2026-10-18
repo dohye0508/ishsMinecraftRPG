@@ -76,9 +76,27 @@ class ConfigIntegrityTest {
         put("npc.write-failed", "error");
         put("npc.added", "key", "name");
         put("scoreboard.lines", "level", "player", "exp", "exp-required", "str", "dex", "int", "hp", "wis",
-                "club", "cooldown", "mp", "max-mp", "club-ranking");
+                "club", "cooldown", "mp", "max-mp", "exp-percent", "exp-bar", "mp-bar");
         put("scoreboard.cooldown", "seconds");
-        put("scoreboard.ranking-line", "rank", "club", "score");
+        put("ranking-board.installed", "x", "y", "z");
+        put("club-score.list-line", "club", "score");
+        put("map-border.status", "state");
+        put("map-border.range", "min-x", "max-x", "min-z", "max-z");
+        put("admin.usage", "fields");
+        put("admin.player-not-found", "player");
+        put("admin.unknown-field", "field", "fields");
+        put("admin.bad-number", "value");
+        put("admin.out-of-range", "field", "range");
+        put("admin.changed", "player", "field", "old", "new");
+        put("admin.club-changed", "player", "club");
+        put("admin.reset", "player");
+        put("admin.info-header", "player");
+        put("admin.info-basic", "level", "exp", "exp-required", "points", "club");
+        put("admin.info-stats", "stats");
+        put("club-score.unknown-club", "club", "clubs");
+        put("club-score.bad-number", "value");
+        put("club-score.changed", "club", "score");
+        put("ranking-board.write-failed", "error");
         put("tab.header", "online");
         put("tab.footer", "online");
         put("skill.heal", "amount");
@@ -207,10 +225,11 @@ class ConfigIntegrityTest {
     }
 
     @Test
-    void scoreboardTemplateHasOneRankingLine() {
+    void scoreboardFitsOnScreenAndHasNoRankingLines() {
         List<String> lines = TestSupport.plugin("messages.yml").getStringList("scoreboard.lines");
-        long rankingLines = lines.stream().filter("{club-ranking}"::equals).count();
-        assertEquals(1, rankingLines, "scoreboard.lines 에는 {club-ranking} 한 줄이 정확히 하나 있어야 합니다");
+        assertTrue(lines.size() <= 15, "사이드바는 최대 15줄까지만 보입니다 (현재 " + lines.size() + "줄)");
+        assertTrue(lines.stream().noneMatch(l -> l.contains("club-ranking")),
+                "동아리 랭킹은 사이드바가 아니라 ranking.yml 의 랭킹판에서 보여 줍니다");
     }
 
     // ===== 도전과제 연결 =====

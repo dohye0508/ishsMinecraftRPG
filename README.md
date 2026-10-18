@@ -29,6 +29,7 @@ ishsMinecraftRpg/
 │   ├── auth/                   # 리로스쿨 계정 인증 (커맨드/리스너/매니저)
 │   ├── item/                   # 커스텀 아이템 로드·지급, 효과 해석/실행 (정의는 items.yml)
 │   ├── npc/                    # NPC 생성·이동·삭제 (npcs.yml 기준, Citizens 연동), /엔피씨 명령
+│   ├── ranking/                # 월드 동아리 랭킹판 (큰 글씨, ranking.yml), /랭킹판 명령
 │   ├── player/                 # 플레이어 데이터, 동아리(직업), 경험치, 스킬(skills.yml), 로비 등
 │   ├── stat/                   # 스탯(HP/MP/능력치) 시스템 및 GUI
 │   ├── listener/               # 개별 기능 리스너 (직사각형 맵 경계 포함)
@@ -75,7 +76,7 @@ cd ishsMinecraftRPG
 ## 🚀 서버 배포 방법
 
 1. 위 연동 플러그인들과 이 플러그인의 빌드 결과물(`build/libs/*.jar`)을 서버의 `plugins/` 폴더에 넣습니다.
-2. 서버를 최초 실행하면 `plugins/ishsMinecraftRpg/`에 설정 파일들(`config.yml`, `gameplay.yml`, `clubs.yml`, `skills.yml`, `items.yml`, `npcs.yml`, `achievements.yml`, `messages.yml`, `help.yml`)이 자동 생성됩니다.
+2. 서버를 최초 실행하면 `plugins/ishsMinecraftRpg/`에 설정 파일들(`config.yml`, `gameplay.yml`, `clubs.yml`, `skills.yml`, `items.yml`, `npcs.yml`, `ranking.yml`, `achievements.yml`, `messages.yml`, `help.yml`)이 자동 생성됩니다.
 3. [`configs/`](configs) 폴더의 **`배포.bat`**을 실행하면 BetonQuest, MythicMobs 설정과 위 파일들이 서버 `plugins/`로 복사됩니다. (서버 폴더 경로는 처음 한 번 입력, 상세는 [configs/README.md](configs/README.md))
 4. 스탯·레벨·보상 수치, 동아리, 스킬, 아이템, NPC, 도전과제, 문구, 맵·인증 설정, 퀘스트 대사 등 `.yml` 설정만 바꾸는 변경은 리빌드가 필요 없습니다. `configs/`를 고치고 `배포.bat` 실행 후 게임에서 `/bq reload`, `/설정리로드`를 입력하면 됩니다. 자바 소스가 바뀐 경우에만 리빌드가 필요합니다.
 

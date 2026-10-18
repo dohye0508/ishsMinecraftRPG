@@ -162,23 +162,99 @@ npc:
 
 # ---- 사이드바 (화면 오른쪽 정보창) ----
 # 한 줄이 목록 하나이고, 위에서부터 차례로 표시됩니다. (최대 15줄까지 보입니다)
-# 쓸 수 있는 자리: {level} {player} {exp} {exp-required} {str} {dex} {int} {hp} {wis} {club} {cooldown} {mp} {max-mp}
-# {club-ranking} 만 적은 줄은 동아리 랭킹 줄들(동아리 수만큼)로 바뀝니다.
+# 빈 줄은 " " (공백 한 칸) 으로 적습니다.
+# 쓸 수 있는 자리:
+#   {player} {level} {club} {cooldown}
+#   {exp} {exp-required} {exp-percent} {exp-bar}      경험치 (숫자, 퍼센트, 막대)
+#   {mp} {max-mp} {mp-bar}                            마나 (숫자, 막대)
+#   {str} {dex} {int} {hp} {wis}                      스탯 (기본 화면에서는 /stat 으로 보므로 쓰지 않음)
+# 동아리 랭킹은 여기가 아니라 월드 랭킹판(ranking.yml)에 표시합니다.
 scoreboard:
-  title: "&6ISHS RPG"
+  title: "&6&lISHS RPG"
   lines:
-    - "&fLv. {level} {player}"
-    - "&fEXP: {exp} / {exp-required}"
-    - "&f🗡 STR: &c{str}&f 🏃 DEX: &9{dex}"
-    - "&f🔮 INT: &b{int}&f ❤ HP: &a{hp}&f ✨ WIS: &d{wis}"
-    - "&f소속: &e{club}"
-    - "&f스킬:{cooldown}"
-    - "&b💧 마나: {mp} / {max-mp}"
-    - "&7--- [ 동아리 랭킹 ] ---"
-    - "{club-ranking}"
-  club-none: "없음"                       # 동아리가 없을 때 {club}
-  cooldown: "&e (쿨타임 {seconds}초)"      # 스킬 쿨타임 중일 때 {cooldown}
-  ranking-line: "&f{rank}위. {club} &f{score}점"   # {rank} 순위, {club} 동아리(색+아이콘+이름), {score} 점수
+    - "&e{player} &7Lv.{level}"
+    - "&8━━━━━━━━━━━━━━"
+    - "&f소속 &8» &e{club}"
+    - " "
+    - "&aEXP &7{exp-percent}%"
+    - "{exp-bar}"
+    - "&bMP &7{mp}/{max-mp}"
+    - "{mp-bar}"
+    - " "
+    - "&f스킬 &8» {cooldown}"
+  club-none: "&7없음"                     # 동아리가 없을 때 {club}
+  skill-ready: "&a사용 가능"                # 스킬을 쓸 수 있을 때 {cooldown}
+  cooldown: "&e쿨타임 {seconds}초"          # 스킬 쿨타임 중일 때 {cooldown}
+  # 막대 그래프 모양 ({exp-bar}, {mp-bar})
+  bar-length: "10"                         # 칸 수
+  bar-char-filled: "▰"                     # 채워진 칸 모양
+  bar-char-empty: "▱"                      # 빈 칸 모양
+  bar-exp-color: "&a"                      # 경험치 막대 색
+  bar-mp-color: "&b"                       # 마나 막대 색
+  bar-empty-color: "&8"                    # 빈 칸 색
+
+
+# ---- 플레이어 수치 수동 조절 (/스탯조정, 관리자 전용) ----
+admin:
+  usage:
+    - "&e/스탯조정 [플레이어] 정보&7 - 현재 레벨/스탯 확인"
+    - "&e/스탯조정 [플레이어] [항목] 설정 [값]&7 - 값을 그대로 맞춤"
+    - "&e/스탯조정 [플레이어] [항목] 추가 [값]&7 - 값을 더함 (음수면 뺌)"
+    - "&7항목: {fields}"
+    - "&e/스탯조정 [플레이어] 동아리 [동아리|없음]&7 - 소속 변경 (가입 보너스 스탯은 자동 조정되지 않음)"
+    - "&e/스탯조정 [플레이어] 초기화&7 - 새 캐릭터 상태로 (레벨 1, 시작 스탯, 소속 없음)"
+  player-not-found: "&c'{player}' 님은 접속 중이 아닙니다."
+  unknown-field: "&c'{field}' 라는 항목이 없습니다. ({fields})"
+  bad-number: "&c'{value}' 는 숫자가 아닙니다."
+  out-of-range: "&c{field} 값은 {range} 범위여야 합니다."
+  changed: "&a[스탯조정] {player} 님의 {field}: &f{old} &a→ &f{new}"
+  club-changed: "&a[스탯조정] {player} 님의 소속: {club}"
+  reset: "&a[스탯조정] {player} 님을 새 캐릭터 상태로 되돌렸습니다."
+  info-header: "&6[스탯조정] {player} 님"
+  info-basic: "&7 Lv.{level}  EXP {exp}/{exp-required}  스탯 포인트 {points}  소속 {club}"
+  info-stats: "&7 {stats}"
+
+
+# ---- 동아리 점수 수동 조절 (/동아리점수, 관리자 전용) ----
+club-score:
+  usage:
+    - "&e/동아리점수 목록&7 - 동아리별 점수"
+    - "&e/동아리점수 설정 [동아리] [점수]&7 - 점수를 그 값으로 맞춤"
+    - "&e/동아리점수 추가 [동아리] [점수]&7 - 점수를 더함 (음수면 뺌)"
+    - "&e/동아리점수 초기화 [동아리|전체]&7 - 0점으로"
+  list-header: "&6[동아리 점수]"
+  list-line: "&7 - {club} &f{score}점"
+  unknown-club: "&c'{club}' 동아리가 없습니다. ({clubs})"
+  bad-number: "&c'{value}' 는 정수가 아닙니다."
+  changed: "&a[동아리 점수] {club} &a→ &f{score}점"
+  reset-all: "&a[동아리 점수] 모든 동아리를 0점으로 초기화했습니다."
+
+
+# ---- 맵 경계 켜기/끄기 (/맵경계, 관리자 전용) ----
+map-border:
+  usage:
+    - "&e/맵경계 켜기&7 - 경계를 켬 (밖으로 못 나가고 파란 벽이 보임)"
+    - "&e/맵경계 끄기&7 - 경계를 끔 (건축할 때 등)"
+    - "&e/맵경계 상태&7 - 현재 상태와 범위"
+  turned-on: "&a[맵 경계] 켰습니다."
+  turned-off: "&e[맵 경계] 껐습니다. 다시 켜려면 /맵경계 켜기"
+  not-saved: "&c설정 파일(config.yml)에 저장하지 못해 지금 상태만 바뀌었습니다. 서버를 다시 켜면 원래대로 돌아갑니다."
+  status: "&7 - 맵 경계: {state}"
+  state-on: "&a켜짐"
+  state-off: "&e꺼짐"
+  range: "&7 - 범위: x {min-x}~{max-x}, z {min-z}~{max-z}"
+
+
+# ---- 랭킹판 (/랭킹판, 관리자 전용) ----
+ranking-board:
+  usage:
+    - "&e/랭킹판 설치&7 - 바라보는 벽에 동아리 랭킹판을 붙임"
+    - "&e/랭킹판 삭제&7 - 랭킹판 삭제"
+    - "&7크기, 문구, 갱신 주기는 ranking.yml 을 고친 뒤 /설정리로드"
+  look-at-wall: "&c벽(블록의 옆면)을 바라보고 다시 입력해 주세요. (12칸 이내)"
+  installed: "&a[랭킹판] {x}, {y}, {z} 에 설치했습니다. 위치가 어색하면 다른 벽을 보고 다시 설치하세요."
+  removed: "&a[랭킹판] 삭제했습니다."
+  write-failed: "&cranking.yml 에 쓰지 못했습니다: {error}"
 
 
 # ---- Tab 목록 (Tab 키를 눌렀을 때 위/아래 문구) ----

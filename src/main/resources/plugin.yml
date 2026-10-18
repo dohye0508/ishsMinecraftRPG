@@ -42,6 +42,22 @@ commands:
   입장허용:
     description: 서버가 켜져 있어도 관리자 외 플레이어의 입장을 허용/차단합니다 (관리자 전용)
     usage: /입장허용 [열기|닫기]
+  스탯조정:
+    description: 접속 중인 플레이어의 레벨, 경험치, 스탯 포인트, 스탯, 동아리를 수동으로 조절합니다 (관리자 전용)
+    usage: /스탯조정 [플레이어] [항목|정보|동아리|초기화] ...
+    aliases: [statadmin]
+  동아리점수:
+    description: 동아리 점수를 수동으로 조절합니다 (관리자 전용)
+    usage: /동아리점수 [목록|설정|추가|초기화]
+    aliases: [clubscore]
+  맵경계:
+    description: 맵 경계(직사각형 월드보더)를 바로 켜거나 끕니다 (관리자 전용)
+    usage: /맵경계 [켜기|끄기|상태]
+    aliases: [mapborder, 경계]
+  랭킹판:
+    description: 동아리 랭킹판을 바라보는 벽에 설치하거나 삭제합니다 (관리자 전용)
+    usage: /랭킹판 [설치|삭제]
+    aliases: [rankingboard]
   엔피씨:
     description: NPC 를 추가하거나 목록을 봅니다 (관리자 전용)
     usage: /엔피씨 [추가|목록]

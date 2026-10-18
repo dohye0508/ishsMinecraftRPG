@@ -6,12 +6,16 @@ import kr.ishs.raibit.ishsMinecraftRpg.auth.AuthManager;
 import kr.ishs.raibit.ishsMinecraftRpg.config.ClubConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.GameplayConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.config.Messages;
+import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.MapBorderListener;
 import kr.ishs.raibit.ishsMinecraftRpg.listener.StatListener;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcCommand;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcManager;
 import kr.ishs.raibit.ishsMinecraftRpg.npc.NpcStartupListener;
+import kr.ishs.raibit.ishsMinecraftRpg.ranking.RankingBoard;
+import kr.ishs.raibit.ishsMinecraftRpg.ranking.RankingCommand;
+import kr.ishs.raibit.ishsMinecraftRpg.ranking.RankingConfig;
 import kr.ishs.raibit.ishsMinecraftRpg.player.*;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItems;
 import kr.ishs.raibit.ishsMinecraftRpg.item.CustomItemListener;
@@ -40,6 +44,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
     private SkillManager skillManager;
     private RpgListener rpgListener;
     private NpcManager npcManager;
+    private RankingBoard rankingBoard;
 
     @Override
     public void onEnable() {
@@ -56,12 +61,16 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         statManager = new StatManager(this, playerManager);
         authManager = new AuthManager(this);
         skillManager = new SkillManager(this);
+        rankingBoard = new RankingBoard(this);
 
         // 커스텀 아이템 태그 초기화
         CustomItems.init(this);
 
         // 모든 설정 파일 로드 (없는 파일은 기본 파일을 만들어 둔다)
         reloadAll();
+
+        // 동아리 점수는 서버를 껐다 켜도 남는다
+        ClubScoreManager.getInstance().load(new File(getDataFolder(), "club-scores.yml"));
 
         // 서버에 이미 접속 중인 플레이어가 있다면(리로드 등) 로드
         for (Player p : getServer().getOnlinePlayers()) {
@@ -96,6 +105,10 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("아이템지급").setExecutor(new CustomItemCommand());
         getCommand("입장허용").setExecutor(new EntryGateCommand(rpgListener));
         getCommand("엔피씨").setExecutor(new NpcCommand(this));
+        getCommand("랭킹판").setExecutor(new RankingCommand(this));
+        getCommand("맵경계").setExecutor(new MapBorderCommand(this, mapBorderListener));
+        getCommand("동아리점수").setExecutor(new ClubScoreCommand());
+        getCommand("스탯조정").setExecutor(new PlayerAdjustCommand(this));
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));
 
         // PlaceholderAPI가 설치되어 있다면 연동
@@ -173,10 +186,18 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         AchievementConfig.load(loadYaml("achievements.yml"), getLogger());
         HelpCommand.load(loadYaml("help.yml"));
         skillManager.load(loadYaml("skills.yml"), getLogger());
+        reloadRanking();
+    }
+
+    /** ranking.yml 을 다시 읽어 월드 랭킹판을 새 설정으로 다시 띄웁니다. */
+    public void reloadRanking() {
+        RankingConfig.load(loadYaml("ranking.yml"), getLogger());
+        rankingBoard.refresh();
     }
 
     @Override
     public void onDisable() {
+        rankingBoard.remove();
         playerManager.saveAll();
     }
 

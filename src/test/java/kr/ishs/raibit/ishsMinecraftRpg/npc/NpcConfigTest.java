@@ -85,4 +85,38 @@ class NpcConfigTest {
         assertEquals("principal_talk", parsed.getString("npc_conversations.principal"));
         assertFalse(out.isBlank());
     }
+
+    @Test
+    void typeDefaultsToPlayerAndAcceptsAnimals() {
+        Map<String, NpcConfig.Npc> npcs = NpcConfig.parse(yaml("""
+                npcs:
+                  person:
+                    location: {x: 1, y: 2, z: 3}
+                  cat:
+                    type: cat
+                    variant: SIAMESE
+                    sitting: true
+                    location: {x: 1, y: 2, z: 3}
+                """), null);
+        assertEquals(org.bukkit.entity.EntityType.PLAYER, npcs.get("person").type);
+        assertEquals(org.bukkit.entity.EntityType.CAT, npcs.get("cat").type);
+        assertEquals("SIAMESE", npcs.get("cat").variant);
+        assertTrue(npcs.get("cat").sitting);
+        assertFalse(npcs.get("person").sitting);
+    }
+
+    @Test
+    void unusableTypeFallsBackToPlayer() {
+        Map<String, NpcConfig.Npc> npcs = NpcConfig.parse(yaml("""
+                npcs:
+                  typo:
+                    type: CATT
+                    location: {x: 1, y: 2, z: 3}
+                  arrow:
+                    type: ARROW
+                    location: {x: 1, y: 2, z: 3}
+                """), null);
+        assertEquals(org.bukkit.entity.EntityType.PLAYER, npcs.get("typo").type);
+        assertEquals(org.bukkit.entity.EntityType.PLAYER, npcs.get("arrow").type, "살아 있는 생물이 아니면 쓸 수 없다");
+    }
 }
