@@ -194,6 +194,27 @@ scoreboard:
   bar-empty-color: "&8"                    # 빈 칸 색
 
 
+# ---- 플레이어 수치 수동 조절 (/스탯조정, 관리자 전용) ----
+admin:
+  usage:
+    - "&e/스탯조정 [플레이어] 정보&7 - 현재 레벨/스탯 확인"
+    - "&e/스탯조정 [플레이어] [항목] 설정 [값]&7 - 값을 그대로 맞춤"
+    - "&e/스탯조정 [플레이어] [항목] 추가 [값]&7 - 값을 더함 (음수면 뺌)"
+    - "&7항목: {fields}"
+    - "&e/스탯조정 [플레이어] 동아리 [동아리|없음]&7 - 소속 변경 (가입 보너스 스탯은 자동 조정되지 않음)"
+    - "&e/스탯조정 [플레이어] 초기화&7 - 새 캐릭터 상태로 (레벨 1, 시작 스탯, 소속 없음)"
+  player-not-found: "&c'{player}' 님은 접속 중이 아닙니다."
+  unknown-field: "&c'{field}' 라는 항목이 없습니다. ({fields})"
+  bad-number: "&c'{value}' 는 숫자가 아닙니다."
+  out-of-range: "&c{field} 값은 {range} 범위여야 합니다."
+  changed: "&a[스탯조정] {player} 님의 {field}: &f{old} &a→ &f{new}"
+  club-changed: "&a[스탯조정] {player} 님의 소속: {club}"
+  reset: "&a[스탯조정] {player} 님을 새 캐릭터 상태로 되돌렸습니다."
+  info-header: "&6[스탯조정] {player} 님"
+  info-basic: "&7 Lv.{level}  EXP {exp}/{exp-required}  스탯 포인트 {points}  소속 {club}"
+  info-stats: "&7 {stats}"
+
+
 # ---- 동아리 점수 수동 조절 (/동아리점수, 관리자 전용) ----
 club-score:
   usage:

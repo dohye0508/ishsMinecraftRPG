@@ -106,6 +106,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("엔피씨").setExecutor(new NpcCommand(this));
         getCommand("랭킹판").setExecutor(new RankingCommand(this));
         getCommand("동아리점수").setExecutor(new ClubScoreCommand());
+        getCommand("스탯조정").setExecutor(new PlayerAdjustCommand(this));
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));
 
         // PlaceholderAPI가 설치되어 있다면 연동

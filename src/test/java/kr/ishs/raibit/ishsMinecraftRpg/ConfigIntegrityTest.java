@@ -80,6 +80,17 @@ class ConfigIntegrityTest {
         put("scoreboard.cooldown", "seconds");
         put("ranking-board.installed", "x", "y", "z");
         put("club-score.list-line", "club", "score");
+        put("admin.usage", "fields");
+        put("admin.player-not-found", "player");
+        put("admin.unknown-field", "field", "fields");
+        put("admin.bad-number", "value");
+        put("admin.out-of-range", "field", "range");
+        put("admin.changed", "player", "field", "old", "new");
+        put("admin.club-changed", "player", "club");
+        put("admin.reset", "player");
+        put("admin.info-header", "player");
+        put("admin.info-basic", "level", "exp", "exp-required", "points", "club");
+        put("admin.info-stats", "stats");
         put("club-score.unknown-club", "club", "clubs");
         put("club-score.bad-number", "value");
         put("club-score.changed", "club", "score");
