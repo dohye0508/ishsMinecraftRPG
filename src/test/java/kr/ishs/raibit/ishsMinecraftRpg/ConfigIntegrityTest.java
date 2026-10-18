@@ -76,9 +76,10 @@ class ConfigIntegrityTest {
         put("npc.write-failed", "error");
         put("npc.added", "key", "name");
         put("scoreboard.lines", "level", "player", "exp", "exp-required", "str", "dex", "int", "hp", "wis",
-                "club", "cooldown", "mp", "max-mp", "club-ranking");
+                "club", "cooldown", "mp", "max-mp");
         put("scoreboard.cooldown", "seconds");
-        put("scoreboard.ranking-line", "rank", "club", "score");
+        put("ranking-board.installed", "x", "y", "z");
+        put("ranking-board.write-failed", "error");
         put("tab.header", "online");
         put("tab.footer", "online");
         put("skill.heal", "amount");
@@ -207,10 +208,11 @@ class ConfigIntegrityTest {
     }
 
     @Test
-    void scoreboardTemplateHasOneRankingLine() {
+    void scoreboardFitsOnScreenAndHasNoRankingLines() {
         List<String> lines = TestSupport.plugin("messages.yml").getStringList("scoreboard.lines");
-        long rankingLines = lines.stream().filter("{club-ranking}"::equals).count();
-        assertEquals(1, rankingLines, "scoreboard.lines 에는 {club-ranking} 한 줄이 정확히 하나 있어야 합니다");
+        assertTrue(lines.size() <= 15, "사이드바는 최대 15줄까지만 보입니다 (현재 " + lines.size() + "줄)");
+        assertTrue(lines.stream().noneMatch(l -> l.contains("club-ranking")),
+                "동아리 랭킹은 사이드바가 아니라 ranking.yml 의 랭킹판에서 보여 줍니다");
     }
 
     // ===== 도전과제 연결 =====

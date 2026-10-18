@@ -42,6 +42,10 @@ commands:
   입장허용:
     description: 서버가 켜져 있어도 관리자 외 플레이어의 입장을 허용/차단합니다 (관리자 전용)
     usage: /입장허용 [열기|닫기]
+  랭킹판:
+    description: 동아리 랭킹판을 바라보는 벽에 설치하거나 삭제합니다 (관리자 전용)
+    usage: /랭킹판 [설치|삭제]
+    aliases: [rankingboard]
   엔피씨:
     description: NPC 를 추가하거나 목록을 봅니다 (관리자 전용)
     usage: /엔피씨 [추가|목록]

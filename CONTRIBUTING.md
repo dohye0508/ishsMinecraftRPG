@@ -11,13 +11,14 @@ GitHub 저장소 상단의 **Contributing** 탭에 표시되는 문서입니다.
 | 스킬 (쿨타임, 마나, 피해량) | `ishsMinecraftRpg/skills.yml` | `/설정리로드` |
 | 커스텀 아이템 (이름, 설명, 기능) | `ishsMinecraftRpg/items.yml` | `/설정리로드` |
 | NPC (이름, 스킨, 위치, 연결할 대화) | `ishsMinecraftRpg/npcs.yml` | `/설정리로드` |
-| 도전과제, 안내·GUI 문구, `/도움말` | `achievements.yml`, `messages.yml`, `help.yml` | `/설정리로드` |
+| 동아리 랭킹판 (크기, 문구) | `ishsMinecraftRpg/ranking.yml` | `/설정리로드` |
+| 도전과제, 안내·GUI·사이드바 문구, `/도움말` | `achievements.yml`, `messages.yml`, `help.yml` | `/설정리로드` |
 | 맵 경계·스폰, 리로스쿨 인증 | `ishsMinecraftRpg/config.yml` | `/설정리로드` |
 | 퀘스트 목표·보상 | `BetonQuest/QuestPackages/default/main.yml` | `/bq reload` |
 | NPC 대사·선택지 | `BetonQuest/QuestPackages/default/conversations/<이름>.yml` | `/bq reload` |
 | 몬스터 | `MythicMobs/Mobs/*.yml` | `/mm reload` |
 
-NPC 위치는 게임에서 명령으로 관리합니다. (`/엔피씨 추가|이동|삭제|목록`, OP 전용)
+NPC 위치는 게임에서 명령으로 관리합니다. (`/엔피씨 추가|이동|삭제|목록`, OP 전용) 랭킹판 위치도 `/랭킹판 설치|삭제`로 정합니다.
 
 ## 🔄 작업 순서
 

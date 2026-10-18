@@ -12,6 +12,7 @@ configs/
 │   ├── skills.yml                 스킬 (쿨타임, 마나, 피해량)
 │   ├── items.yml                  커스텀 아이템 (이름, 설명, 기능)
 │   ├── npcs.yml                   NPC (위치, 이름, 스킨, 연결할 대화)
+│   ├── ranking.yml                월드 동아리 랭킹판 (크기, 문구, 위치)
 │   ├── achievements.yml           도전과제 이름·설명·알림 문구
 │   ├── messages.yml               알림·안내·GUI·사이드바 문구
 │   └── help.yml                   /도움말 문구

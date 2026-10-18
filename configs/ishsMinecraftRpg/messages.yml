@@ -163,22 +163,29 @@ npc:
 # ---- 사이드바 (화면 오른쪽 정보창) ----
 # 한 줄이 목록 하나이고, 위에서부터 차례로 표시됩니다. (최대 15줄까지 보입니다)
 # 쓸 수 있는 자리: {level} {player} {exp} {exp-required} {str} {dex} {int} {hp} {wis} {club} {cooldown} {mp} {max-mp}
-# {club-ranking} 만 적은 줄은 동아리 랭킹 줄들(동아리 수만큼)로 바뀝니다.
+# 동아리 랭킹은 여기가 아니라 월드 랭킹판(ranking.yml)에 표시합니다. 스탯은 /stat 에서 봅니다.
 scoreboard:
   title: "&6ISHS RPG"
   lines:
     - "&fLv. {level} {player}"
     - "&fEXP: {exp} / {exp-required}"
-    - "&f🗡 STR: &c{str}&f 🏃 DEX: &9{dex}"
-    - "&f🔮 INT: &b{int}&f ❤ HP: &a{hp}&f ✨ WIS: &d{wis}"
     - "&f소속: &e{club}"
-    - "&f스킬:{cooldown}"
     - "&b💧 마나: {mp} / {max-mp}"
-    - "&7--- [ 동아리 랭킹 ] ---"
-    - "{club-ranking}"
+    - "&f스킬:{cooldown}"
   club-none: "없음"                       # 동아리가 없을 때 {club}
   cooldown: "&e (쿨타임 {seconds}초)"      # 스킬 쿨타임 중일 때 {cooldown}
-  ranking-line: "&f{rank}위. {club} &f{score}점"   # {rank} 순위, {club} 동아리(색+아이콘+이름), {score} 점수
+
+
+# ---- 랭킹판 (/랭킹판, 관리자 전용) ----
+ranking-board:
+  usage:
+    - "&e/랭킹판 설치&7 - 바라보는 벽에 동아리 랭킹판을 붙임"
+    - "&e/랭킹판 삭제&7 - 랭킹판 삭제"
+    - "&7크기, 문구, 갱신 주기는 ranking.yml 을 고친 뒤 /설정리로드"
+  look-at-wall: "&c벽(블록의 옆면)을 바라보고 다시 입력해 주세요. (12칸 이내)"
+  installed: "&a[랭킹판] {x}, {y}, {z} 에 설치했습니다. 위치가 어색하면 다른 벽을 보고 다시 설치하세요."
+  removed: "&a[랭킹판] 삭제했습니다."
+  write-failed: "&cranking.yml 에 쓰지 못했습니다: {error}"
 
 
 # ---- Tab 목록 (Tab 키를 눌렀을 때 위/아래 문구) ----

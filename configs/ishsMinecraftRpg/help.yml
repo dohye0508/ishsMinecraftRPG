@@ -33,6 +33,10 @@ op-lines:
   - "&f  - &a/엔피씨 이동 [키]&f 서 있는 자리로 이동, &a/엔피씨 삭제 [키]&f 삭제, &a/엔피씨 목록"
   - "&f  - 이름/스킨 수정은 plugins/ishsMinecraftRpg/npcs.yml 을 고치고 &a/설정리로드"
   - "&f  - 대화는 BetonQuest 의 conversations/[키].yml 에 만들고 &a/bq reload&f 로 적용합니다."
+  - ""
+  - "&7[2] 동아리 랭킹판"
+  - "&f  - 붙일 벽을 바라보고 &a/랭킹판 설치&f, 없애려면 &a/랭킹판 삭제"
+  - "&f  - 크기/문구는 plugins/ishsMinecraftRpg/ranking.yml 을 고치고 &a/설정리로드"
 
 footer:
   - ""
