@@ -68,6 +68,9 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         // 모든 설정 파일 로드 (없는 파일은 기본 파일을 만들어 둔다)
         reloadAll();
 
+        // 동아리 점수는 서버를 껐다 켜도 남는다
+        ClubScoreManager.getInstance().load(new File(getDataFolder(), "club-scores.yml"));
+
         // 서버에 이미 접속 중인 플레이어가 있다면(리로드 등) 로드
         for (Player p : getServer().getOnlinePlayers()) {
             playerManager.loadPlayer(p);
@@ -102,6 +105,7 @@ public final class IshsMinecraftRpg extends JavaPlugin {
         getCommand("입장허용").setExecutor(new EntryGateCommand(rpgListener));
         getCommand("엔피씨").setExecutor(new NpcCommand(this));
         getCommand("랭킹판").setExecutor(new RankingCommand(this));
+        getCommand("동아리점수").setExecutor(new ClubScoreCommand());
         getCommand("설정리로드").setExecutor(new ReloadCommand(this, mapBorderListener));
 
         // PlaceholderAPI가 설치되어 있다면 연동

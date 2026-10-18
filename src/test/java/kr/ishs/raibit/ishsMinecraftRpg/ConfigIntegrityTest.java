@@ -79,6 +79,10 @@ class ConfigIntegrityTest {
                 "club", "cooldown", "mp", "max-mp", "exp-percent", "exp-bar", "mp-bar");
         put("scoreboard.cooldown", "seconds");
         put("ranking-board.installed", "x", "y", "z");
+        put("club-score.list-line", "club", "score");
+        put("club-score.unknown-club", "club", "clubs");
+        put("club-score.bad-number", "value");
+        put("club-score.changed", "club", "score");
         put("ranking-board.write-failed", "error");
         put("tab.header", "online");
         put("tab.footer", "online");
